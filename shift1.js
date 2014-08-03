@@ -82,15 +82,32 @@
 
 		player.isCollidingWithGround = false;
 		player.isColliding = false;
+		
+
+		// Portal values keeps toggling based on 		
+		player.portal = 1;
+		player.sign = 1;
 
 		Vector.call(player,0,0,player.dx,player.dy);
 
 		var jumpCounter = 0;
 		player.update = function(){
 
+			if(KeyStatus.shift){
+				player.portal = player.portal^1; //Invert the physics metrics 
+				
+				if(player.portal){
+					player.sign = 1;
+				}
+				else{
+					player.sign = -1; 
+				}
+
+				console.log(player.portal);
+			}
 
 			if(KeyStatus.right){
-				console.log("right pressed");
+				//console.log("right pressed");
 				player.dx = 4;
 			}
 
@@ -103,31 +120,33 @@
 			}
 
 			if(KeyStatus.up && !player.isJumping){
-				console.log("jump dhanlaxmi");
-				player.dy = -5;
+			//	console.log("jump dhanlaxmi");
+				player.dy = -5 * player.sign;
 				player.isJumping = true;
 				jumpCounter = 20;
 			}
 
 			if(player.isJumping && jumpCounter){
-				player.dy = -5;
+				player.dy = -5 * player.sign;
 			}
 
 			jumpCounter = Math.max(0,jumpCounter-1);
 
-			
-
 			if(player.isColliding){
 				player.dy = 0;
+				console.log("colliding at y position " + player.y)
+				// Thats all i did for the white circle to respond well
+				//if(!player.portal){
+				//	player.isColliding = false;
+				//}
 			}
-
 			else{
-				player.dy+=player.gravity;
+				player.dy+=(player.gravity*player.sign);
 			}
 
 			if(player.isColliding && KeyStatus.up){
-				console.log("COMON")
-				player.dy = -5;
+			//	console.log("COMON")
+				player.dy = -5*player.sign ;
 				player.isJumping = false;
 				player.isColliding = false;
 			}
@@ -143,12 +162,23 @@
 
 		player.draw = function(){
 
-			ctx.fillStyle = "black";
-			ctx.beginPath();
-			ctx.arc(player.x,player.y,player.radius,0,2*Math.PI);
-			ctx.closePath();
-			ctx.fill();
-
+			if(player.portal){
+				ctx.fillStyle = "black";
+				ctx.beginPath();
+				ctx.arc(player.x,player.y,player.radius,0,2*Math.PI);
+				ctx.closePath();
+				ctx.fill();
+				console.log("blaack");
+			}
+			else {
+				ctx.fillStyle = "white";
+				ctx.beginPath();
+				ctx.arc(player.x,player.y+2*player.radius,player.radius,0,2*Math.PI);
+				ctx.closePath();
+				ctx.fill();
+				console.log("white");
+			}
+			
 		};
 		return player;
 	}(Object.create(Vector.prototype));
@@ -160,7 +190,7 @@
 		this.x = x;
 		this.y = y;
 		this.width = 800;
-		this.height = 50;
+		this.height = 800;
 
 
 		this.draw = function(){
@@ -381,9 +411,21 @@
 			for(var y=0;y<obj.length;y++){
 				if(objects[x].collidableWith == obj[y].type){
 					if(objects[x].type == "circle"){
-						if(objects[x].y + objects[x].radius >= obj[y].y){
-								objects[x].isColliding = true;	
-						} 
+
+						// if circle is black
+						if(objects[x].portal){
+							if(objects[x].y + objects[x].radius >= obj[y].y){
+									objects[x].isColliding = true;	
+							} 
+						}
+
+						//if circle is white
+						else{
+							//Some really dirty manipulation 
+							if(objects[x].y+1.5*objects[x].radius-objects[x].radius <= obj[y].y){
+									objects[x].isColliding = true;	
+							}	
+						}
 					}
 				}
 			}
@@ -405,9 +447,10 @@
 		quadtree.insert(player);
 		quadtree.insert(terrain);
 
+		updateTerrain();
 		player.update();
 		player.draw();
-		updateTerrain();
+		
 		detectCollision();
 	}
 
