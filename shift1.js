@@ -1,5 +1,9 @@
 (function(){
 
+	//TO DO : invert the canvas on shift button
+	//		  Blood particle effect
+	//		  Sexy map with destination and spikes 
+
 	var canvas = document.getElementById("mycanvas"),
 	ctx = canvas.getContext("2d");
 
@@ -9,7 +13,9 @@
 	var player = {};
 	var terrain = [];
 	var quadtree ;
-
+	var bloodParticles = []; //Release when the player dies 
+	var finished = 0;
+	var pourblood = false;
 
 	window.requestAnimFrame = function(){
 	    return (
@@ -31,13 +37,12 @@
 		37 : "left",
 		38 : "up",
 		39 : "right",
-		16 : "shift"
-
+		16 : "shift",
+		32 : "space"
 	};
 
 	document.onkeyup = function(e){
 		var key = e.keyCode;
-
 		if(KeyCode[key]){
 			KeyStatus[KeyCode[key]] = false;
 		}
@@ -47,7 +52,6 @@
 	document.onkeydown = function(e){
 
 		var key = e.keyCode;
-
 		if(KeyCode[key]){
 			KeyStatus[KeyCode[key]] = true;
 		}
@@ -56,7 +60,6 @@
 	function Vector(x,y,dx,dy){
 		this.x = x || 0;
 		this.y = y || 0;
-
 		this.dx = dx;
 		this.dy = dy;
 	}
@@ -93,6 +96,14 @@
 		var jumpCounter = 0;
 		player.update = function(){
 
+			//temporary Gameover Clause
+			if(KeyStatus.space){
+
+				console.log('space is pressed')
+				pourblood = true;
+
+			}
+
 			if(KeyStatus.shift){
 				player.portal = player.portal^1; //Invert the physics metrics 
 				
@@ -102,7 +113,6 @@
 				else{
 					player.sign = -1; 
 				}
-
 				console.log(player.portal);
 			}
 
@@ -134,18 +144,13 @@
 
 			if(player.isColliding){
 				player.dy = 0;
-				console.log("colliding at y position " + player.y)
-				// Thats all i did for the white circle to respond well
-				//if(!player.portal){
-				//	player.isColliding = false;
-				//}
+//				console.log("colliding at y position " + player.y)
 			}
 			else{
 				player.dy+=(player.gravity*player.sign);
 			}
 
 			if(player.isColliding && KeyStatus.up){
-			//	console.log("COMON")
 				player.dy = -5*player.sign ;
 				player.isJumping = false;
 				player.isColliding = false;
@@ -168,7 +173,6 @@
 				ctx.arc(player.x,player.y,player.radius,0,2*Math.PI);
 				ctx.closePath();
 				ctx.fill();
-				console.log("blaack");
 			}
 			else {
 				ctx.fillStyle = "white";
@@ -176,7 +180,6 @@
 				ctx.arc(player.x,player.y+2*player.radius,player.radius,0,2*Math.PI);
 				ctx.closePath();
 				ctx.fill();
-				console.log("white");
 			}
 			
 		};
@@ -198,6 +201,33 @@
 			ctx.fillRect(this.x,this.y,this.width,this.height);
 		}
 	}
+
+	function createBlood(){
+
+		this.x = player.x;
+		this.y = player.y;
+		
+		this.vx = Math.random()*20 - 10;
+		this.vy = Math.random()*20 - 10;
+
+		this.color = "red";
+		this.radius = 3;
+
+		this.draw = function(){
+			
+			ctx.fillStyle = this.color;
+			ctx.beginPath();
+			if(player.portal){
+				ctx.arc(this.x,this.y,this.radius,Math.PI * 2,false);
+			}
+			else{
+				ctx.arc(this.x,this.y+2*player.radius,this.radius,Math.PI * 2,false);
+			}
+			ctx.closePath();
+			ctx.fill();
+		}
+	}
+	//createBlood.prototype = Object.create(Vector.prototype);
 
 	function QuadTree(boundbox,lvl){
 
@@ -439,19 +469,82 @@
 		}
 	}
 
+	function draw_blood(){
+		for(var i=0;i<1;i++){
+			bloodParticles.push(new createBlood());
+		}
+		
+		for(var i=0;i<bloodParticles.length;i++){
+
+			var b = bloodParticles[i];
+			b.draw();
+			b.x += b.vx*0.5;
+			b.y += b.vy*0.5;
+		}
+
+	}
+
+	function GameOver(){
+		ctx.font="30px Verdana";
+		var gradient=ctx.createLinearGradient(0,0,canvas.width,0);
+		gradient.addColorStop("0","magenta");
+		gradient.addColorStop("0.5","blue");
+		gradient.addColorStop("1.0","red");
+		// Fill with gradient
+		ctx.fillStyle=gradient;
+		ctx.fillText("GameOver !",canvas.width/2,canvas.height/2);
+	
+	}
+
+	/*
+	function rotate() {
+		
+	  console.log("fuck this shit ")
+	  // Clear the canvas
+	  ctx.clearRect(0, 0, canvas.width, canvas.height);
+		
+	  // Move registration point to the center of the canvas
+	  ctx.translate(canvas.width/2, canvas.height/2);
+		
+	  // Rotate 1 degree
+	  ctx.rotate(Math.PI);
+	    
+	  // Move registration point back to the top left corner of canvas
+	  ctx.translate(-canvas.width/2, -canvas.height/2);
+	}
+	*/
+
 	function animate(){
 
-		requestAnimFrame(animate);
-		ctx.clearRect(0,0,canvas.width,canvas.height);
-		quadtree.clear();
-		quadtree.insert(player);
-		quadtree.insert(terrain);
-
-		updateTerrain();
-		player.update();
-		player.draw();
+		if(!finished){
 		
-		detectCollision();
+			requestAnimFrame(animate);
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+			quadtree.clear();
+			quadtree.insert(player);
+			quadtree.insert(terrain);
+
+			updateTerrain();
+			player.update();
+			player.draw();
+			
+			detectCollision();
+			
+			//pourblood when space is pressed 
+			if(pourblood){
+				draw_blood();
+				GameOver()	;
+			}
+			/*
+			if(!player.portal){
+				rotate();
+			}
+			*/
+		}
+		else{
+			GameOver();
+		}
+
 	}
 
 	function startGame(){
