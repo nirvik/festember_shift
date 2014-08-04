@@ -6,6 +6,7 @@
 
 	var canvas = document.getElementById("mycanvas"),
 	ctx = canvas.getContext("2d");
+	console.log("hey this is ctx " + ctx);
 
 	var width = canvas.width;
 	var height = canvas.height;
@@ -16,6 +17,7 @@
 	var bloodParticles = []; //Release when the player dies 
 	var finished = 0;
 	var pourblood = false;
+	var rotateToggle = 0;
 
 	window.requestAnimFrame = function(){
 	    return (
@@ -104,7 +106,8 @@
 
 			}
 
-			if(KeyStatus.shift){
+			if(KeyStatus.shift && player.isColliding){
+				
 				player.portal = player.portal^1; //Invert the physics metrics 
 				
 				if(player.portal){
@@ -114,15 +117,17 @@
 					player.sign = -1; 
 				}
 				console.log(player.portal);
+				rotateToggle = rotateToggle^1;
+				KeyStatus.shift = false;
 			}
 
 			if(KeyStatus.right){
 				//console.log("right pressed");
-				player.dx = 4;
+				player.dx = 4*player.sign;
 			}
 
 			if(KeyStatus.left){
-				player.dx = -4;
+				player.dx = -4*player.sign;
 			}
 
 			if(!KeyStatus.left && !KeyStatus.right){
@@ -192,8 +197,8 @@
 		this.collidableWith = "player";
 		this.x = x;
 		this.y = y;
-		this.width = 800;
-		this.height = 800;
+		this.width = 400;
+		this.height = 400;
 
 
 		this.draw = function(){
@@ -496,24 +501,6 @@
 	
 	}
 
-	/*
-	function rotate() {
-		
-	  console.log("fuck this shit ")
-	  // Clear the canvas
-	  ctx.clearRect(0, 0, canvas.width, canvas.height);
-		
-	  // Move registration point to the center of the canvas
-	  ctx.translate(canvas.width/2, canvas.height/2);
-		
-	  // Rotate 1 degree
-	  ctx.rotate(Math.PI);
-	    
-	  // Move registration point back to the top left corner of canvas
-	  ctx.translate(-canvas.width/2, -canvas.height/2);
-	}
-	*/
-
 	function animate(){
 
 		if(!finished){
@@ -535,11 +522,13 @@
 				draw_blood();
 				GameOver()	;
 			}
-			/*
-			if(!player.portal){
-				rotate();
+			
+			if(rotateToggle){
+				$('.box').toggleClass('box-rotate');
+			//	setTimeout(function(){ $('.box').removeClass('box-rotate'); },1000);
+				rotateToggle = false;
 			}
-			*/
+			
 		}
 		else{
 			GameOver();
@@ -556,12 +545,34 @@
 			height : canvas.height
 		});
 
-		terrain.push(new floor(0,260));
+		terrain.push(new floor(0,160));
 		player.reset();
 		animate();
 	}
 
-
+	function parseMap(img) {
+		var tempCanvas = document.createElement('canvas'),
+		ctx = tempCanvas.getContext('2d');
+		var grid = new Uint32Array(img.width * img.height);
+		grid.width = tempCanvas.width = img.width;
+		grid.height = tempCanvas.height = img.height;
+		grid.getAt = function(i, j) {
+			return grid[i + j * grid.width];
+		}
+		ctx.drawImage(img, 0, 0);
+		var i, j, k;
+		for(i = 0; i < grid.width; i++) {
+			for(j = 0; j < grid.height; j++) {
+				var dat = ctx.getImageData(i, j, 1, 1),
+				val = 0;
+				for(k = 0; k < 4; k++) {
+					val = val << 8 | dat[k];
+				}
+				grid[j * grid.width + i] = val;
+			}
+		}
+		return grid;
+	}
 	startGame();
 
 })()
