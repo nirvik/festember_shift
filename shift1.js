@@ -537,29 +537,33 @@
 	}
 
 	function startGame(){
-
 		quadtree = new QuadTree({
 			x:0,
 			y:0,
 			width : canvas.width,
 			height : canvas.height
 		});
-
+		var img = new Image();
+		img.src = 'level1.jpg';
+		img.onload = function() {
+			map = parseMap(img);
+			console.log(map);
+		}
 		terrain.push(new floor(0,160));
 		player.reset();
 		animate();
 	}
 
-	function parseMap(img) {
+	function parseMap(image) {
 		var tempCanvas = document.createElement('canvas'),
 		ctx = tempCanvas.getContext('2d');
-		var grid = new Uint32Array(img.width * img.height);
-		grid.width = tempCanvas.width = img.width;
-		grid.height = tempCanvas.height = img.height;
+		var grid = new Uint32Array(image.width * image.height);
+		grid.width = tempCanvas.width = image.width;
+		grid.height = tempCanvas.height = image.height;
 		grid.getAt = function(i, j) {
 			return grid[i + j * grid.width];
 		}
-		ctx.drawImage(img, 0, 0);
+		ctx.drawImage(image, 0, 0);
 		var i, j, k;
 		for(i = 0; i < grid.width; i++) {
 			for(j = 0; j < grid.height; j++) {
