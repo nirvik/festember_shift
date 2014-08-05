@@ -3,11 +3,11 @@
 	//TO DO : invert the canvas on shift button
 	//		  Blood particle effect
 	//		  Sexy map with destination and spikes 
+	//		  A spawn function to spawn player at appropriate position
 
 	var canvas = document.getElementById("mycanvas"),
 	ctx = canvas.getContext("2d");
-	console.log("hey this is ctx " + ctx);
-
+	
 	var width = canvas.width;
 	var height = canvas.height;
 
@@ -149,6 +149,7 @@
 
 			if(player.isColliding){
 				player.dy = 0;
+				console.log("stop @" + player.x+","+player.y );
 //				console.log("colliding at y position " + player.y)
 			}
 			else{
@@ -166,8 +167,8 @@
 
 		player.reset = function(){
 
-			player.x = 60;
-			player.y = 120;
+			player.x = 120;
+			player.y =200;
 		};
 
 		player.draw = function(){
@@ -191,18 +192,19 @@
 		return player;
 	}(Object.create(Vector.prototype));
 
-	function floor(x,y){
+	function floor(x,y,value){
 
 		this.type = "floor";
 		this.collidableWith = "player";
 		this.x = x;
 		this.y = y;
-		this.width = 400;
-		this.height = 400;
-
+		this.width = 50;//400;
+		this.height = 50;//400;
+		this.color = (value==4294967295)?"black":"white";
 
 		this.draw = function(){
-			ctx.fillStyle = "black";
+
+			ctx.fillStyle = this.color;			
 			ctx.fillRect(this.x,this.y,this.width,this.height);
 		}
 	}
@@ -254,7 +256,7 @@
 			
 			this.objects = [];
 			for(var i = 0;i<this.nodes.length;i++){
-				this.nodes.clear();
+				this.nodes[i].clear();
 			}
 
 			this.nodes = [];
@@ -361,33 +363,33 @@
 			var subHeight = this.boundbox.height/2 || 0;
 
 			this.nodes[0] = new QuadTree({
-				x : this.nodes[0].x + subWidht,
-				y : this.nodes[0].y,
+				x : this.boundbox.x + subWidht,
+				y : this.boundbox.y,
 				width : subWidht,
 				height : subHeight
-			},level+1);
+			},this.level+1);
 
 
 			this.nodes[1] = new QuadTree({
-				x : this.nodes[1].x,
-				y : this.nodes[1].y,
+				x : this.boundbox.x,
+				y : this.boundbox.y,
 				width : subWidht,
 				height : subHeight
-			},level+1);
+			},this.level+1);
 
 			this.nodes[2] = new QuadTree({
-				x : this.nodes[2].x,
-				y : this.nodes[2].y + subHeight,
+				x : this.boundbox.x,
+				y : this.boundbox.y + subHeight,
 				width : subWidht,
 				height : subHeight
-			},level+1);
+			},this.level+1);
 
 			this.nodes[3] = new QuadTree({
-				x : this.nodes[3].x + subWidht,
-				y : this.nodes[3].y,
+				x : this.boundbox.x + subWidht,
+				y : this.boundbox.y,
 				width : subWidht,
 				height : subHeight
-			},level+1);
+			},this.level+1);
 
 		}
 
@@ -449,16 +451,25 @@
 
 						// if circle is black
 						if(objects[x].portal){
-							if(objects[x].y + objects[x].radius >= obj[y].y){
-									objects[x].isColliding = true;	
+							if(obj[y].color=="black"){
+								if(objects[x].y + objects[x].radius >= obj[y].y &&
+									objects[x].x<obj[y].x+obj[y].width &&
+									objects[x].x+objects[x].radius>obj[y].x
+									){
+										objects[x].isColliding = true;
+										console.log('collided @' + objects[x].x + ',' + objects[x].y);
+
+								}
 							} 
 						}
 
 						//if circle is white
 						else{
+							if(obj[y].color=="white"){
 							//Some really dirty manipulation 
-							if(objects[x].y+1.5*objects[x].radius-objects[x].radius <= obj[y].y){
-									objects[x].isColliding = true;	
+								if(objects[x].y+1.5*objects[x].radius-objects[x].radius <= obj[y].y){
+										objects[x].isColliding = true;	
+								}
 							}	
 						}
 					}
@@ -525,7 +536,6 @@
 			
 			if(rotateToggle){
 				$('.box').toggleClass('box-rotate');
-			//	setTimeout(function(){ $('.box').removeClass('box-rotate'); },1000);
 				rotateToggle = false;
 			}
 			
@@ -536,6 +546,17 @@
 
 	}
 
+	function loadMap(map){
+
+		var i,j;
+		for(i=0;i<map.width;i++){
+			for(j=0;j<map.height;j++){
+				terrain.push(new floor(i*50,j*50,map.getAt(i,j))); //
+			//	console.log(terrain);
+			}
+		}
+	}
+
 	function startGame(){
 		quadtree = new QuadTree({
 			x:0,
@@ -544,12 +565,14 @@
 			height : canvas.height
 		});
 		var img = new Image();
-		img.src = 'level1.jpg';
+		img.src = 'level1.png';
 		img.onload = function() {
 			map = parseMap(img);
 			console.log(map);
+			loadMap(map);
+
 		}
-		terrain.push(new floor(0,160));
+	//	terrain.push(new floor(0,160));
 		player.reset();
 		animate();
 	}
@@ -560,17 +583,21 @@
 		var grid = new Uint32Array(image.width * image.height);
 		grid.width = tempCanvas.width = image.width;
 		grid.height = tempCanvas.height = image.height;
+		
 		grid.getAt = function(i, j) {
 			return grid[i + j * grid.width];
 		}
+
 		ctx.drawImage(image, 0, 0);
 		var i, j, k;
 		for(i = 0; i < grid.width; i++) {
 			for(j = 0; j < grid.height; j++) {
-				var dat = ctx.getImageData(i, j, 1, 1),
+				var dat = ctx.getImageData(i, j, 1, 1); // x,y,width,height
+//				console.log(dat);
 				val = 0;
 				for(k = 0; k < 4; k++) {
-					val = val << 8 | dat[k];
+					val = val << 8 | dat.data[k];
+//					console.log(val);
 				}
 				grid[j * grid.width + i] = val;
 			}
