@@ -121,12 +121,12 @@
 				KeyStatus.shift = false;
 			}
 
-			if(KeyStatus.right){
+			if(KeyStatus.right ){
 				//console.log("right pressed");
 				player.dx = 4*player.sign;
 			}
 
-			if(KeyStatus.left){
+			if(KeyStatus.left ){
 				player.dx = -4*player.sign;
 			}
 
@@ -452,10 +452,8 @@
 						// if circle is black
 						if(objects[x].portal){
 							if(obj[y].color=="black"){
-								if(objects[x].y + objects[x].radius >= obj[y].y &&
-									objects[x].x<obj[y].x+obj[y].width &&
-									objects[x].x+objects[x].radius>obj[y].x
-									){
+								if(objects[x].x <= obj[y].x + obj[y].width  && objects[x].x + objects[x].radius  >= obj[y].x &&
+		objects[x].y < obj[y].y + obj[y].height && objects[x].y + objects[x].radius > obj[y].y){
 										objects[x].isColliding = true;
 										console.log('collided @' + objects[x].x + ',' + objects[x].y);
 
@@ -467,10 +465,17 @@
 						else{
 							if(obj[y].color=="white"){
 							//Some really dirty manipulation 
-								if(objects[x].y+1.5*objects[x].radius-objects[x].radius <= obj[y].y){
-										objects[x].isColliding = true;	
-								}
-							}	
+							//	if(objects[x].y+1.5*objects[x].radius-objects[x].radius <= obj[y].y){
+							//			objects[x].isColliding = true;	
+							//	}
+								if(objects[x].x <= obj[y].x + obj[y].width  && objects[x].x + objects[x].radius  >= obj[y].x &&
+		objects[x].y < obj[y].y + obj[y].height && objects[x].y + objects[x].radius > obj[y].y){
+										objects[x].isColliding = true;
+										console.log('collided @' + objects[x].x + ',' + objects[x].y);
+
+									}
+							}
+							
 						}
 					}
 				}
@@ -518,6 +523,7 @@
 		
 			requestAnimFrame(animate);
 			ctx.clearRect(0,0,canvas.width,canvas.height);
+			
 			quadtree.clear();
 			quadtree.insert(player);
 			quadtree.insert(terrain);
@@ -525,7 +531,7 @@
 			updateTerrain();
 			player.update();
 			player.draw();
-			
+			player.isColliding = false;
 			detectCollision();
 			
 			//pourblood when space is pressed 
@@ -551,8 +557,7 @@
 		var i,j;
 		for(i=0;i<map.width;i++){
 			for(j=0;j<map.height;j++){
-				terrain.push(new floor(i*50,j*50,map.getAt(i,j))); //
-			//	console.log(terrain);
+				terrain.push(new floor(i*51,j*51 + 3,map.getAt(i,j))); //
 			}
 		}
 	}
