@@ -84,24 +84,21 @@
 		player.dx = 0;
 		player.dy = 0;
 		player.isJumping = false;
-		player.gravity = 2;
-		player.dt = 0.5;
+		player.gravity = 1;
+		player.dt = 0.3;
 
-		player.isCollidingWithGround = false;
 		player.isColliding = false;
-		
-
 		// Portal values keeps toggling based on 		
+
 		player.portal = 1;
 		player.sign = 1;
-		player.color = 'black'
+		player.color = "black"
 
 		Vector.call(player,0,0,player.dx,player.dy);
 
 		var jumpCounter = 0;
 		player.update = function(){
 
-			//temporary Gameover Clause
 			if(KeyStatus.space){
 
 				console.log('space is pressed')
@@ -109,10 +106,8 @@
 
 			}
 
-			if(KeyStatus.shift && player.isColliding){
-				
+			if(KeyStatus.shift){				
 				player.portal = player.portal^1; //Invert the physics metrics 
-				
 				if(player.portal){
 					player.sign = 1;
 				}
@@ -136,13 +131,13 @@
 			}
 
 			if(KeyStatus.up && !player.isJumping){
-				player.dy = -10 * player.sign * player.dt;
+				player.dy = -5 * player.sign ;//* player.dt;
 				player.isJumping = true;
 				jumpCounter = 10;
 			}
 
 			if(player.isJumping && jumpCounter){
-				player.dy = -10 * player.sign * player.dt;
+				player.dy = -5 * player.sign ;
 			}
 
 			jumpCounter = Math.max(0,jumpCounter-1);
@@ -150,12 +145,13 @@
 			if(player.isColliding){
 				player.dy = 0;
 			}
+
 			else{
-				player.dy+=(player.gravity * player.sign * player.dt);
+				player.dy=player.dy+(player.gravity * player.sign * player.dt) || 1;
 			}
 
 			if(player.isColliding && KeyStatus.up){
-				player.dy = -10 * player.sign * player.dt ;
+				player.dy = -5 * player.sign; //* player.dt ;
 				player.isJumping = false;
 				player.isColliding = false;
 			}
@@ -166,24 +162,24 @@
 		player.reset = function(){
 
 			player.x = 130;
-			player.y =200;
+			player.y = 200;
 		};
 
 		player.draw = function(){
 
 			if(player.portal){
-				ctx.fillStyle = "yellow";
-				player.color = "black";
+				ctx.fillStyle = "black";
+				player.color = "black"; //black
 				ctx.beginPath();
 				ctx.arc(player.x,player.y,player.radius,0,2*Math.PI);
 				ctx.closePath();
 				ctx.fill();
 			}
 			else {
-				ctx.fillStyle = "red";
-				player.color = "white";
+				ctx.fillStyle = "white";
+				player.color = "white"; //white
 				ctx.beginPath();
-				ctx.arc(player.x,player.y+2*player.radius,player.radius,0,2*Math.PI);
+				ctx.arc(player.x,player.y+5*player.radius,player.radius,0,2*Math.PI);
 				ctx.closePath();
 				ctx.fill();
 			}
@@ -236,9 +232,6 @@
 	}
 	//createBlood.prototype = Object.create(Vector.prototype);
 
-
-/*
-*/
 	function updateTerrain(){
 
 		for(var i=0;i<terrain.length;i++){
@@ -275,45 +268,39 @@
 
 	function detectCollision(){
 
-		var i,j; //row , column
-
+		var i,j;
 		var tileWidth = 50;
 		var tileHeight = 50;
 
 		i = Math.floor(player.x/tileWidth);
 		j = Math.floor(player.y/tileHeight);
-		//console.log(i+","+j)
+
 		if(typeof(map)!="undefined"){
 			var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
-					if(map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight - player.y <= player.radius){
-						console.log("hey");
+					
+					if(map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight-player.y<=player.radius){
 						player.isColliding = true;
-						player.y = (j+1)*(tileHeight) - player.radius;
+						player.y = (j+1)*tileHeight - player.radius/2;
 					}
 
-					else if(map.getAt(i, j - 1) == collideColor && player.y - j*tileHeight <= player.radius){
-						player.isColliding = true;
-						player.y = j*(tileHeight) + player.radius;
+					else if(map.getAt(i, j-1) == collideColor && player.y-2*player.radius - ((j-1)*tileHeight+tileHeight) <= player.radius){
+					//	player.isColliding = true;
+						player.isColliding = false;
+						player.y = (j-1)*(tileHeight) + 3*player.radius + tileHeight;
 					}
 
 					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
 						player.isColliding = true;
-						player.x = (i+1)*(tileWidth) - player.radius;
+						player.x = (i+1)*(tileWidth) - player.radius*1.5;
 					}
-
-					else if(map.getAt(i - 1, j) == collideColor && player.x - i*tileWidth <= player.radius) {
+					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
 						player.isColliding = true;
-						player.x = i*(tileWidth) + player.radius;
-					}
-				
+						player.x = (i-1)*(tileWidth) + player.radius*1.5 + tileWidth;
+					}	
 		}
 
 	}
-/*
-	function adjustNormalForce(){
 
-	}
-*/
 	function animate(){
 
 		if(!finished){
@@ -329,10 +316,9 @@
 			player.update();
 			player.draw();
 			player.isColliding = false;
+
 			detectCollision();
 
-		//	adjustNormalForce();
-			
 			if(pourblood){
 				draw_blood();
 				GameOver()	;
@@ -355,7 +341,7 @@
 		var i,j;
 		for(i=0;i<map.width;i++){
 			for(j=0;j<map.height;j++){
-				terrain.push(new floor(i*51,j*51 + 3,map.getAt(i,j))); //
+				terrain.push(new floor(i*51,j*51,map.getAt(i,j))); //
 			}
 		}
 	}
