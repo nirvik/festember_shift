@@ -87,6 +87,7 @@
 		player.gravity = 1;
 		player.dt = 0.3;
 
+		player.isCollidingWithWalls = false;
 		player.isColliding = false;
 		// Portal values keeps toggling based on 		
 
@@ -132,13 +133,13 @@
 
 
 			if(KeyStatus.up && !player.isJumping){
-				player.dy = -5 * player.sign ;//* player.dt;
+				player.dy = -3 * player.sign ;//* player.dt;
 				player.isJumping = true;
 				jumpCounter = 10;
 			}
 
 			if(player.isJumping && jumpCounter){
-				player.dy = -5 * player.sign ;
+				player.dy = -3 * player.sign ;
 			}
 
 			jumpCounter = Math.max(0,jumpCounter-1);
@@ -151,8 +152,18 @@
 				player.dy=player.dy+(player.gravity * player.sign * player.dt) ;
 			}
 			
-			if(player.isColliding && KeyStatus.up && !KeyStatus.right && !KeyStatus.left){
-				player.dy = -5 * player.sign; //* player.dt ;
+			// if colliding against the wall then disable left and right 
+			if(player.isCollidingWithWalls && KeyStatus.up ){
+				player.dy = -3 * player.sign; //* player.dt ;
+				player.isJumping = false;
+				player.isColliding = false;
+				KeyStatus.left = false;
+				KeyStatus.right = false;
+			}
+
+			// If it just collides against the floor then its cool
+			else if(player.isColliding && KeyStatus.up){
+				player.dy = -3 * player.sign; //* player.dt ;
 				player.isJumping = false;
 				player.isColliding = false;
 			}
@@ -275,6 +286,8 @@
 		var tileWidth = 50;
 		var tileHeight = 50;
 
+		//*********** Update this******************
+		// If the portal is set then do something about i and j
 		i = Math.floor(player.x/tileWidth);
 		j = Math.floor(player.y/tileHeight);
 
@@ -294,10 +307,12 @@
 
 					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
 						player.isColliding = true;
+						player.isCollidingWithWalls = true;
 						player.x = (i+1)*(tileWidth) - player.radius*1.5;
 					}
 					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
 						player.isColliding = true;
+						player.isCollidingWithWalls = true;
 						player.x = (i-1)*(tileWidth) + player.radius*1.5 + tileWidth;
 					}	
 		}
@@ -319,7 +334,7 @@
 			player.update();
 			player.draw();
 			player.isColliding = false;
-
+			player.isCollidingWithWalls = false;
 			detectCollision();
 
 			if(pourblood){
