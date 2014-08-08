@@ -119,16 +119,17 @@
 			}
 
 			if(KeyStatus.right){
-				player.dx = 5 * player.sign * player.dt;
+				player.dx = 3 * player.sign;// * player.dt;
 			}
 
 			if(KeyStatus.left){
-				player.dx = -5 * player.sign * player.dt;
+				player.dx = -3 * player.sign;// * player.dt;
 			}
 
 			if(!KeyStatus.left && !KeyStatus.right){
 				player.dx = 0;
 			}
+
 
 			if(KeyStatus.up && !player.isJumping){
 				player.dy = -5 * player.sign ;//* player.dt;
@@ -147,14 +148,16 @@
 			}
 
 			else{
-				player.dy=player.dy+(player.gravity * player.sign * player.dt) || 1;
+				player.dy=player.dy+(player.gravity * player.sign * player.dt) ;
 			}
-
-			if(player.isColliding && KeyStatus.up){
+			
+			if(player.isColliding && KeyStatus.up && !KeyStatus.right && !KeyStatus.left){
 				player.dy = -5 * player.sign; //* player.dt ;
 				player.isJumping = false;
 				player.isColliding = false;
 			}
+			
+
 
 			this.advance();
 		};
