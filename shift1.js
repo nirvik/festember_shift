@@ -133,13 +133,14 @@
 
 
 			if(KeyStatus.up && !player.isJumping){
-				player.dy = -3 * player.sign ;//* player.dt;
+				player.dy = -4 * player.sign ;//* player.dt;
 				player.isJumping = true;
 				jumpCounter = 10;
+				
 			}
 
 			if(player.isJumping && jumpCounter){
-				player.dy = -3 * player.sign ;
+				player.dy = -4 * player.sign ;
 			}
 
 			jumpCounter = Math.max(0,jumpCounter-1);
@@ -152,22 +153,23 @@
 				player.dy=player.dy+(player.gravity * player.sign * player.dt) ;
 			}
 			
+			/*
 			// if colliding against the wall then disable left and right 
-			if(player.isCollidingWithWalls && KeyStatus.up ){
-				player.dy = -3 * player.sign; //* player.dt ;
+			if(player.isCollidingWithWalls){
+				player.dy = -4 * player.sign; //* player.dt ;
 				player.isJumping = false;
 				player.isColliding = false;
 				KeyStatus.left = false;
 				KeyStatus.right = false;
 			}
-
+			*/
 			// If it just collides against the floor then its cool
-			else if(player.isColliding && KeyStatus.up){
-				player.dy = -3 * player.sign; //* player.dt ;
+			if(player.isColliding && KeyStatus.up){
+				player.dy = -4 * player.sign; //* player.dt ;
 				player.isJumping = false;
 				player.isColliding = false;
 			}
-			
+
 
 
 			this.advance();
@@ -297,21 +299,28 @@
 					if(map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight-player.y<=player.radius){
 						player.isColliding = true;
 						player.y = (j+1)*tileHeight - player.radius/2;
+						console.log('floor')
 					}
 
 					else if(map.getAt(i, j-1) == collideColor && player.y-2*player.radius - ((j-1)*tileHeight+tileHeight) <= player.radius){
 					//	player.isColliding = true;
 						player.isColliding = false;
+					//	player.isCollidingWithWalls = true;
+						console.log('ceiling')
 						player.y = (j-1)*(tileHeight) + 3*player.radius + tileHeight;
 					}
 
 					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
-						player.isColliding = true;
+						console.log('right wall');
+					
+						//player.isColliding = true;
 						player.isCollidingWithWalls = true;
 						player.x = (i+1)*(tileWidth) - player.radius*1.5;
 					}
 					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
-						player.isColliding = true;
+						console.log('left wall');
+	
+						//player.isColliding = true;
 						player.isCollidingWithWalls = true;
 						player.x = (i-1)*(tileWidth) + player.radius*1.5 + tileWidth;
 					}	
@@ -359,7 +368,7 @@
 		var i,j;
 		for(i=0;i<map.width;i++){
 			for(j=0;j<map.height;j++){
-				terrain.push(new floor(i*51,j*51,map.getAt(i,j))); //
+				terrain.push(new floor(i*50,j*50,map.getAt(i,j))); //
 			}
 		}
 	}
