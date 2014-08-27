@@ -70,22 +70,36 @@
 		this.y = this.y + this.dy;
 
 	}
+
+	Vector.prototype.subtract = function(a,b){
+		
+		x = a.x - b.x;
+		y = a.y - b.y;
+		
+		return {'x':x,'y':y}; 
+	}
+
+	Vector.prototype.dot = function(a,b,theta){
+
+		return (a.x*b.x + a.y*b.y)*Math.cos(theta*Math.PI/180);
+	
+	}
 	
 	var player = function(player){
 
 		player.radius = 5;
 		player.type = "circle";
 		player.collidableWith = "floor";
-
+		player.restitution = 0.4;
+		player.velocity.x = 4; // approx : have to come up with the metric 
+		player.velocity.y = 4;
 		player.dx = 0;
 		player.dy = 0;
 		player.isJumping = false;
 		player.gravity = 1;
-		player.dt = 0.3;
-
-		player.isCollidingWithWalls = false; // with ceiling
-		player.isColliding = false; // with floor
-		player.isCollidingWithCeiling = false; // with ceiling 
+		player.dt = 0.5;
+		player.isColliding = false;
+		player.mass = 2;
 		// Portal values keeps toggling based on 		
 
 		player.portal = 1;
@@ -114,11 +128,11 @@
 			}
 
 			if(KeyStatus.right){
-				player.dx = 3 * player.sign;// * player.dt;
+				player.dx = player.velocity.x * player.sign;// * player.dt;
 			}
 
 			if(KeyStatus.left){
-				player.dx = -3 * player.sign;// * player.dt;
+				player.dx = -player.velocity.x * player.sign;// * player.dt;
 			}
 
 			if(!KeyStatus.left && !KeyStatus.right){
@@ -127,31 +141,31 @@
 
 
 			if(KeyStatus.up && !player.isJumping){
-				player.dy = -4 * player.sign ;//* player.dt;
+				player.dy = -player.velocity.y * player.sign ;//* player.dt;
 				player.isJumping = true;
 				jumpCounter = 10;
 				
 			}
 
 			if(player.isJumping && jumpCounter){
-				player.dy = -4 * player.sign ;
+				player.dy = -player.velocity.y * player.sign ;
 			}
 
 			jumpCounter = Math.max(0,jumpCounter-1);
 
 
 			if(player.isColliding){
-				player.dy = 0;
+				resolveCollision();
 			}
-			else{
-				console.log("this shit happens")
+
+			else{				
 				player.dy+=(player.gravity * player.sign * player.dt) ;
 			}
 			
 			// If it just collides against the floor then its cool
 			if(player.isColliding && KeyStatus.up){
-				player.dy = -4 * player.sign; //* player.dt ;
-				player.isJumping = false;
+				player.dy = -player.velocity.y * player.sign; //* player.dt ;
+				player.isJumping = false; // shouldnt this be true ???????????????????
 				player.isColliding = false;
 			}
 
@@ -185,6 +199,7 @@
 			
 		};
 		return player;
+
 	}(Object.create(Vector.prototype));
 
 	function floor(x,y,value){
@@ -193,9 +208,13 @@
 		this.collidableWith = "player";
 		this.x = x;
 		this.y = y;
-		this.width = 50;//400;
-		this.height = 50;//400;
+		this.width = 50;
+		this.height = 50;
 		this.color = (value==0xffffffff)?"black":(value==65535)?"green":"white";
+		this.restitution = 0;
+		this.mass = Infinity ;
+		this.velocity.x  = 0;
+		this.velocity.y = 0;
 
 		this.draw = function(){
 
@@ -253,6 +272,24 @@
 
 	}
 
+	function CalculateImpulse(){
+		
+		Vector.call(this);
+		var e = Math.min(player.restitution,floor.restitution);
+		var relativeVelocity = this.subtract(floor.velocity,player.velocity);
+		var normalUnitVector = {};
+		normalUnitVector.x  = relativeVelocity.x/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
+		normalUnitVector.y  = relativeVelocity.y/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
+		theta = Math.atan(normalUnitVector.y/normalUnitVector.x)*180/Math.PI;
+		
+		var dotproduct = this.dot(relativeVelocity,normalUnitVector,theta);	
+	}
+	CalculateImpulse.prototype = Object.create(Vector.prototype);
+
+	function resolveCollision(){
+
+	}
+
 	function GameOver(){
 		ctx.font="30px Verdana";
 		var gradient=ctx.createLinearGradient(0,0,canvas.width,0);
@@ -281,23 +318,25 @@
 					
 					if(map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight-player.y<=player.radius){
 						player.isColliding = true;
-						player.y = (j+1)*tileHeight - player.radius/2;
-						console.log("WHATTTTTTTT THE FUCK")
 					}
 
 					else if(map.getAt(i, j-1) == collideColor && player.y-2*player.radius - ((j-1)*tileHeight+tileHeight) <= player.radius){
-						player.isCollidingWithCeiling = true;
-						player.y = (j-1)*(tileHeight) + player.radius*1.5 + tileHeight;
+						player.isColliding = true;
+						//player.isCollidingWithCeiling = true;
 					}
 
 					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
+						player.isColliding = true;
 						player.isCollidingWithWalls = true;
-						player.x = (i+1)*(tileWidth) - player.radius*1.5;
 					}
 					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
+						player.isColliding = true;
 						player.isCollidingWithWalls = true;
-						player.x = (i-1)*(tileWidth) + player.radius*1.5 + tileWidth;
 					}	
+
+					if(player.isColliding){
+						console.log(player.isColliding);
+					}
 		}
 
 	}
@@ -312,10 +351,7 @@
 			player.update();
 			player.draw();
 			player.isColliding = false;
-			player.isCollidingWithWalls = false;
-			player.isCollidingWithCeiling = false;
 			detectCollision();
-
 			if(pourblood){
 				draw_blood();
 				GameOver()	;
@@ -365,7 +401,7 @@
 		grid.height = tempCanvas.height = image.height;
 		
 		grid.getAt = function(i, j) {
-			return grid[i + j * grid.width];
+			return grid[i * grid.width + j];
 		}
 
 		ctx.drawImage(image, 0, 0);
@@ -377,7 +413,7 @@
 				for(k = 0; k < 4; k++) {
 					val = val << 8 | dat.data[k];
 				}
-				grid[j * grid.width + i] = val;
+				grid[i * grid.width + j] = val;
 			}
 		}
 		return grid;
