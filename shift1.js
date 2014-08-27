@@ -1,9 +1,5 @@
 (function(){
 
-	//TO DO : invert the canvas on shift button.. Done
-	//		  Blood particle effect... Done
-	//		  Sexy map with destination and spikes.. Done 
-	//		  A spawn function to spawn player at appropriate position.. Not yet
 
 	var canvas = document.getElementById("mycanvas"),
 	ctx = canvas.getContext("2d");
@@ -87,8 +83,9 @@
 		player.gravity = 1;
 		player.dt = 0.3;
 
-		player.isCollidingWithWalls = false;
-		player.isColliding = false;
+		player.isCollidingWithWalls = false; // with ceiling
+		player.isColliding = false; // with floor
+		player.isCollidingWithCeiling = false; // with ceiling 
 		// Portal values keeps toggling based on 		
 
 		player.portal = 1;
@@ -101,10 +98,7 @@
 		player.update = function(){
 
 			if(KeyStatus.space){
-
-				console.log('space is pressed')
 				pourblood = true;
-
 			}
 
 			if(KeyStatus.shift){				
@@ -145,32 +139,21 @@
 
 			jumpCounter = Math.max(0,jumpCounter-1);
 
+
 			if(player.isColliding){
 				player.dy = 0;
 			}
-
 			else{
-				player.dy=player.dy+(player.gravity * player.sign * player.dt) ;
+				console.log("this shit happens")
+				player.dy+=(player.gravity * player.sign * player.dt) ;
 			}
 			
-			/*
-			// if colliding against the wall then disable left and right 
-			if(player.isCollidingWithWalls){
-				player.dy = -4 * player.sign; //* player.dt ;
-				player.isJumping = false;
-				player.isColliding = false;
-				KeyStatus.left = false;
-				KeyStatus.right = false;
-			}
-			*/
 			// If it just collides against the floor then its cool
 			if(player.isColliding && KeyStatus.up){
 				player.dy = -4 * player.sign; //* player.dt ;
 				player.isJumping = false;
 				player.isColliding = false;
 			}
-
-
 
 			this.advance();
 		};
@@ -299,28 +282,19 @@
 					if(map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight-player.y<=player.radius){
 						player.isColliding = true;
 						player.y = (j+1)*tileHeight - player.radius/2;
-						console.log('floor')
+						console.log("WHATTTTTTTT THE FUCK")
 					}
 
 					else if(map.getAt(i, j-1) == collideColor && player.y-2*player.radius - ((j-1)*tileHeight+tileHeight) <= player.radius){
-					//	player.isColliding = true;
-						player.isColliding = false;
-					//	player.isCollidingWithWalls = true;
-						console.log('ceiling')
-						player.y = (j-1)*(tileHeight) + 3*player.radius + tileHeight;
+						player.isCollidingWithCeiling = true;
+						player.y = (j-1)*(tileHeight) + player.radius*1.5 + tileHeight;
 					}
 
 					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
-						console.log('right wall');
-					
-						//player.isColliding = true;
 						player.isCollidingWithWalls = true;
 						player.x = (i+1)*(tileWidth) - player.radius*1.5;
 					}
 					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
-						console.log('left wall');
-	
-						//player.isColliding = true;
 						player.isCollidingWithWalls = true;
 						player.x = (i-1)*(tileWidth) + player.radius*1.5 + tileWidth;
 					}	
@@ -334,16 +308,12 @@
 		
 			requestAnimFrame(animate);
 			ctx.clearRect(0,0,canvas.width,canvas.height);
-			
-			//quadtree.clear();
-			//quadtree.insert(player);
-			//quadtree.insert(terrain);
-
 			updateTerrain();
 			player.update();
 			player.draw();
 			player.isColliding = false;
 			player.isCollidingWithWalls = false;
+			player.isCollidingWithCeiling = false;
 			detectCollision();
 
 			if(pourblood){
@@ -374,14 +344,7 @@
 	}
 
 	function startGame(){
-/*
-		quadtree = new QuadTree({
-			x:0,
-			y:0,
-			width : canvas.width,
-			height : canvas.height
-		});
-*/
+
 		var img = new Image();
 		img.src = 'level1.png';
 		img.onload = function() {
