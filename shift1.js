@@ -77,16 +77,15 @@
 		player.type = "circle";
 		player.collidableWith = "floor";
 		player.restitution = 0.4;
-		player.velocity = {}
-		player.velocity.x = 0; // approx : have to come up with the metric 
-		player.velocity.y = 0;
+		
+		player.velocity = 3;
 		player.dx = 0;
 		player.dy = 0;
 		player.isJumping = false;
 		player.gravity = 1;
-		player.dt = 0.5;
+		player.dt = 0.3;
 		player.isColliding = false;
-		player.mass = 2;
+		player.mass = 1.4;
 		// Portal values keeps toggling based on 		
 
 		player.portal = 1;
@@ -115,33 +114,29 @@
 			}
 
 			if(KeyStatus.right){
-				player.velocity.x = 4;
-				player.velocity.y = 0;
-				player.dx = player.velocity.x * player.sign;// * player.dt;
+				player.dx = player.velocity * player.sign;// * player.dt;
 			}
 
 			if(KeyStatus.left){
 				player.velocity.x = 4;
 				player.velocity.y = 0;
-				player.dx = -player.velocity.x * player.sign;// * player.dt;
+				player.dx = -player.velocity * player.sign;// * player.dt;
 			}
 
 			if(!KeyStatus.left && !KeyStatus.right){
-				player.velocity.x = 0;
 				player.dx = 0;
 			}
 
 
 			if(KeyStatus.up && !player.isJumping){
-				player.velocity.y = 4;
-				player.dy = -player.velocity.y * player.sign ;//* player.dt;
+				player.dy = -player.velocity * player.sign ;//* player.dt;
 				player.isJumping = true;
 				jumpCounter = 10;
 				
 			}
 
 			if(player.isJumping && jumpCounter){
-				player.dy = -player.velocity.y * player.sign ;
+				player.dy = -player.velocity * player.sign ;
 			}
 
 			jumpCounter = Math.max(0,jumpCounter-1);
@@ -152,14 +147,12 @@
 			}
 
 			else{				
-				player.velocity.x = 0;
-				player.velocity.y = player.gravity*player.dt*player.sign;
 				player.dy+=(player.gravity * player.sign * player.dt) ;
 			}
 			
 			// If it just collides against the floor then its cool
 			if(player.isColliding && KeyStatus.up){
-				player.dy = -player.velocity.y * player.sign; //* player.dt ;
+				player.dy = -player.velocity * player.sign; //* player.dt ;
 				player.isJumping = false; 
 				player.isColliding = false;
 			}
@@ -209,8 +202,6 @@
 		this.color = (value==0xffffffff)?"black":(value==65535)?"green":"white";
 		this.restitution = 0;
 		this.mass = Infinity ;
-		this.velocity.x  = 0;
-		this.velocity.y = 0;
 
 		this.draw = function(){
 
@@ -323,19 +314,28 @@
 		var VelAlongNormal = 0;
 
 		if(!normalUnitVector.hasOwnProperty('x')){
+
+			console.log("OH MY FREAKING GOD ! THIS IS HAPPENING ")
 			normalUnitVector.x  = relativeVelocity.x/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
 			normalUnitVector.y  = relativeVelocity.y/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
 			theta = Math.atan(normalUnitVector.y/normalUnitVector.x)*180/Math.PI;
-			VelAlongNormal = dot(relativeVelocity,normalUnitVector,theta);
+			VelAlongNormal = player.dx*Math.cos(theta*Math.PI/180)+player.dy*Math.cos(theta*Math.PI/180);//dot(relativeVelocity,normalUnitVector,theta);
+		
 		}
 
 		else{
 			VelAlongNormal = player.dx*Math.cos(theta*Math.PI/180)+player.dy*Math.cos(theta*Math.PI/180);
 		}
 
-		console.log(theta)
+		/* Since the object goes down the dy increases i.e dy>0
+			Va > 0
+			Vb - Va < 0
+			(Vb-Va)cos(180) > 0
+			It should collide 
+			as we go down y increases  
+		*/
+
 		if(VelAlongNormal > 0){
-			console.log("this shit")
 			return ;
 		}
 
@@ -349,9 +349,6 @@
 		player.dx -= (impulse.x);
 		player.dy -= (impulse.y);
 		
-		//It obviously wont change but just for the sake of maintaning the physics
-		//floor.velocity.x -= (impulse.x/floor.mass);
-		//fllor.velocity.y -= (impulse.y/floor.mass);
 	}
 
 
