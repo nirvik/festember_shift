@@ -60,8 +60,8 @@
 	function Vector(x,y,dx,dy){
 		this.x = x || 0;
 		this.y = y || 0;
-		this.dx = dx;
-		this.dy = dy;
+		this.dx = dx || 0;
+		this.dy = dy || 0;
 	}
 
 	Vector.prototype.advance = function(){
@@ -71,28 +71,15 @@
 
 	}
 
-	Vector.prototype.subtract = function(a,b){
-		
-		x = a.x - b.x;
-		y = a.y - b.y;
-		
-		return {'x':x,'y':y}; 
-	}
-
-	Vector.prototype.dot = function(a,b,theta){
-
-		return (a.x*b.x + a.y*b.y)*Math.cos(theta*Math.PI/180);
-	
-	}
-	
 	var player = function(player){
 
 		player.radius = 5;
 		player.type = "circle";
 		player.collidableWith = "floor";
 		player.restitution = 0.4;
-		player.velocity.x = 4; // approx : have to come up with the metric 
-		player.velocity.y = 4;
+		player.velocity = {}
+		player.velocity.x = 0; // approx : have to come up with the metric 
+		player.velocity.y = 0;
 		player.dx = 0;
 		player.dy = 0;
 		player.isJumping = false;
@@ -128,19 +115,25 @@
 			}
 
 			if(KeyStatus.right){
+				player.velocity.x = 4;
+				player.velocity.y = 0;
 				player.dx = player.velocity.x * player.sign;// * player.dt;
 			}
 
 			if(KeyStatus.left){
+				player.velocity.x = 4;
+				player.velocity.y = 0;
 				player.dx = -player.velocity.x * player.sign;// * player.dt;
 			}
 
 			if(!KeyStatus.left && !KeyStatus.right){
+				player.velocity.x = 0;
 				player.dx = 0;
 			}
 
 
 			if(KeyStatus.up && !player.isJumping){
+				player.velocity.y = 4;
 				player.dy = -player.velocity.y * player.sign ;//* player.dt;
 				player.isJumping = true;
 				jumpCounter = 10;
@@ -159,13 +152,15 @@
 			}
 
 			else{				
+				player.velocity.x = 0;
+				player.velocity.y = player.gravity*player.dt*player.sign;
 				player.dy+=(player.gravity * player.sign * player.dt) ;
 			}
 			
 			// If it just collides against the floor then its cool
 			if(player.isColliding && KeyStatus.up){
 				player.dy = -player.velocity.y * player.sign; //* player.dt ;
-				player.isJumping = false; // shouldnt this be true ???????????????????
+				player.isJumping = false; 
 				player.isColliding = false;
 			}
 
@@ -202,8 +197,9 @@
 
 	}(Object.create(Vector.prototype));
 
-	function floor(x,y,value){
+	function Floor(x,y,value){
 
+		this.velocity = {};
 		this.type = "floor";
 		this.collidableWith = "player";
 		this.x = x;
@@ -271,24 +267,48 @@
 		}
 
 	}
+	
+	function Vec_Sub(a, b) {
+		return {'x': a.x - b.x, 'y': a.y - b.y};
+	}
 
-	function CalculateImpulse(){
+ 	function dot(a,b,theta){
+		return (a.x*b.x + a.y*b.y)*Math.cos(theta*Math.PI/180);
+	}
+	
+	function resolveCollision(){
 		
-		Vector.call(this);
-		var e = Math.min(player.restitution,floor.restitution);
-		var relativeVelocity = this.subtract(floor.velocity,player.velocity);
+		var e = Math.min(player.restitution,0);
+
+		var relativeVelocity = Vec_Sub({'x':0,'y':0},player.velocity);
 		var normalUnitVector = {};
 		normalUnitVector.x  = relativeVelocity.x/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
 		normalUnitVector.y  = relativeVelocity.y/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
 		theta = Math.atan(normalUnitVector.y/normalUnitVector.x)*180/Math.PI;
 		
-		var dotproduct = this.dot(relativeVelocity,normalUnitVector,theta);	
-	}
-	CalculateImpulse.prototype = Object.create(Vector.prototype);
+		//var VelAlongNormal = dot(relativeVelocity,normalUnitVector,theta);
+		var VelAlongNormal = (relativeVelocity.y<0)
+		if(VelAlongNormal > 0){
+			console.log("this shit")
+			return ;
+		}
 
-	function resolveCollision(){
+		var j = -(1+e)*VelAlongNormal;
+		j /= (1/player.mass);
 
+		var impulse = {};
+		impulse.x = j * normalUnitVector.x ;
+		impulse.y = j * normalUnitVector.y ;
+		//Lets now apply the impulse 
+		player.velocity.x -= (impulse.x);
+		player.velocity.y -= (impulse.y);
+		console.log(relativeVelocity);		
+		
+		//It obviously wont change but just for the sake of maintaning the physics
+		//floor.velocity.x -= (impulse.x/floor.mass);
+		//fllor.velocity.y -= (impulse.y/floor.mass);
 	}
+
 
 	function GameOver(){
 		ctx.font="30px Verdana";
@@ -308,8 +328,6 @@
 		var tileWidth = 50;
 		var tileHeight = 50;
 
-		//*********** Update this******************
-		// If the portal is set then do something about i and j
 		i = Math.floor(player.x/tileWidth);
 		j = Math.floor(player.y/tileHeight);
 
@@ -326,11 +344,9 @@
 					}
 
 					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
-						player.isColliding = true;
 						player.isCollidingWithWalls = true;
 					}
 					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
-						player.isColliding = true;
 						player.isCollidingWithWalls = true;
 					}	
 
@@ -374,7 +390,7 @@
 		var i,j;
 		for(i=0;i<map.width;i++){
 			for(j=0;j<map.height;j++){
-				terrain.push(new floor(i*50,j*50,map.getAt(i,j))); //
+				terrain.push(new Floor(i*50,j*50,map.getAt(i,j))); //
 			}
 		}
 	}
