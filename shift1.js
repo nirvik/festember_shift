@@ -276,18 +276,64 @@
 		return (a.x*b.x + a.y*b.y)*Math.cos(theta*Math.PI/180);
 	}
 	
+	function SimplifyNormalForce(){
+
+		var velx = player.dx;
+		var vely = player.dy;
+		var norm = {};
+		if(velx ==0 && vely<0){
+
+			//normal force act up
+			norm.x = 0;
+			norm.y = -1;
+		}
+
+		else if(velx > 0 && vely == 0){
+			//normal force act left
+			norm.x = -1;
+			norm.y = 0;
+		}
+
+		else if(velx<0 && vely==0){
+
+			//normal force act right
+			norm.x = 1;
+			norm.y = 0;
+		}
+
+		else if(velx==0 && vely>0){
+
+			//normal force act down
+			norm.x =0;
+			norm.y = 1;
+		}
+		return norm;
+	}
+
 	function resolveCollision(){
 		
 		var e = Math.min(player.restitution,0);
 
-		var relativeVelocity = Vec_Sub({'x':0,'y':0},player.velocity);
-		var normalUnitVector = {};
-		normalUnitVector.x  = relativeVelocity.x/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
-		normalUnitVector.y  = relativeVelocity.y/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
-		theta = Math.atan(normalUnitVector.y/normalUnitVector.x)*180/Math.PI;
-		
-		//var VelAlongNormal = dot(relativeVelocity,normalUnitVector,theta);
-		var VelAlongNormal = (relativeVelocity.y<0)
+		var Vb = {'x':0,'y':0};
+		var Va = {'x':player.dx ,'y':player.dy};
+
+		var relativeVelocity = Vec_Sub(Vb,Va);
+		var normalUnitVector = SimplifyNormalForce();
+		var theta = 180;
+		var VelAlongNormal = 0;
+
+		if(!normalUnitVector.hasOwnProperty('x')){
+			normalUnitVector.x  = relativeVelocity.x/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
+			normalUnitVector.y  = relativeVelocity.y/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
+			theta = Math.atan(normalUnitVector.y/normalUnitVector.x)*180/Math.PI;
+			VelAlongNormal = dot(relativeVelocity,normalUnitVector,theta);
+		}
+
+		else{
+			VelAlongNormal = player.dx*Math.cos(theta*Math.PI/180)+player.dy*Math.cos(theta*Math.PI/180);
+		}
+
+		console.log(theta)
 		if(VelAlongNormal > 0){
 			console.log("this shit")
 			return ;
@@ -300,9 +346,8 @@
 		impulse.x = j * normalUnitVector.x ;
 		impulse.y = j * normalUnitVector.y ;
 		//Lets now apply the impulse 
-		player.velocity.x -= (impulse.x);
-		player.velocity.y -= (impulse.y);
-		console.log(relativeVelocity);		
+		player.dx -= (impulse.x);
+		player.dy -= (impulse.y);
 		
 		//It obviously wont change but just for the sake of maintaning the physics
 		//floor.velocity.x -= (impulse.x/floor.mass);
