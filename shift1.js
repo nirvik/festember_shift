@@ -76,16 +76,16 @@
 		player.radius = 5;
 		player.type = "circle";
 		player.collidableWith = "floor";
-		player.restitution = 0.4;
+		player.restitution = 0.5;
 		
 		player.velocity = 3;
 		player.dx = 0;
 		player.dy = 0;
 		player.isJumping = false;
 		player.gravity = 1;
-		player.dt = 0.3;
+		player.dt = 0.5;
 		player.isColliding = false;
-		player.mass = 1.4;
+		player.mass = 1;
 		// Portal values keeps toggling based on 		
 
 		player.portal = 1;
@@ -118,8 +118,6 @@
 			}
 
 			if(KeyStatus.left){
-				player.velocity.x = 4;
-				player.velocity.y = 0;
 				player.dx = -player.velocity * player.sign;// * player.dt;
 			}
 
@@ -271,84 +269,76 @@
 
 		var velx = player.dx;
 		var vely = player.dy;
-		var norm = {};
-		if(velx ==0 && vely<0){
+		var norm = {'x':0,'y':0};
 
-			//normal force act up
-			norm.x = 0;
-			norm.y = -1;
+		//Problem with this is that vely is never 0 : fucking problem all over again
+		if(player.isColliding){	
+			if(vely<0){
+
+				//normal force act down
+				norm.x = 0;
+				norm.y = -1;
+			}
+
+			else if(vely>0){
+				//normal force act up
+				norm.x = 0;
+				norm.y = 1;
+			}
 		}
-
-		else if(velx > 0 && vely == 0){
+		
+		if(player.isCollidingWithWalls){
+			
+			if(velx>0){
 			//normal force act left
-			norm.x = -1;
-			norm.y = 0;
+				norm.x = 1;
+				norm.y = 0;
+			}
+			else if(velx<=0){
+				//normal force act right
+				norm.x = -1;
+				norm.y = 0;
+			}
 		}
 
-		else if(velx<0 && vely==0){
-
-			//normal force act right
-			norm.x = 1;
-			norm.y = 0;
-		}
-
-		else if(velx==0 && vely>0){
-
-			//normal force act down
-			norm.x =0;
-			norm.y = 1;
-		}
 		return norm;
 	}
 
 	function resolveCollision(){
 		
 		var e = Math.min(player.restitution,0);
-
 		var Vb = {'x':0,'y':0};
 		var Va = {'x':player.dx ,'y':player.dy};
 
-		var relativeVelocity = Vec_Sub(Vb,Va);
 		var normalUnitVector = SimplifyNormalForce();
+		var VelAlongNormal = 0 ;
 		var theta = 180;
-		var VelAlongNormal = 0;
+		var j;
+		var impulse = {}
+		//console.log(normalUnitVector)
 
-		if(!normalUnitVector.hasOwnProperty('x')){
-
-			console.log("OH MY FREAKING GOD ! THIS IS HAPPENING ")
-			normalUnitVector.x  = relativeVelocity.x/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
-			normalUnitVector.y  = relativeVelocity.y/(Math.sqrt(Math.pow(relativeVelocity.x,2)+Math.pow(relativeVelocity.y,2)));
-			theta = Math.atan(normalUnitVector.y/normalUnitVector.x)*180/Math.PI;
-			VelAlongNormal = player.dx*Math.cos(theta*Math.PI/180)+player.dy*Math.cos(theta*Math.PI/180);//dot(relativeVelocity,normalUnitVector,theta);
-		
+		if(normalUnitVector.x!=0 ){
+			VelAlongNormal = player.velocity * Math.cos(theta*Math.PI/180);
+			var j = -(1+e)*VelAlongNormal;
+			j /= (1/player.mass);
+			impulse.x = j * normalUnitVector.x ;
+			
+			//Lets now apply the impulse 
+			player.dx -= 2*(impulse.x);
+			console.log(impulse.x)
 		}
 
-		else{
-			VelAlongNormal = player.dx*Math.cos(theta*Math.PI/180)+player.dy*Math.cos(theta*Math.PI/180);
-		}
+		if(normalUnitVector.y!=0){ 
+			VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
+			j = -(1+e)*VelAlongNormal;
+			j /= (1/player.mass);
 
-		/* Since the object goes down the dy increases i.e dy>0
-			Va > 0
-			Vb - Va < 0
-			(Vb-Va)cos(180) > 0
-			It should collide 
-			as we go down y increases  
-		*/
-
-		if(VelAlongNormal > 0){
-			return ;
-		}
-
-		var j = -(1+e)*VelAlongNormal;
-		j /= (1/player.mass);
-
-		var impulse = {};
-		impulse.x = j * normalUnitVector.x ;
-		impulse.y = j * normalUnitVector.y ;
-		//Lets now apply the impulse 
-		player.dx -= (impulse.x);
-		player.dy -= (impulse.y);
-		
+			impulse.y = j * normalUnitVector.y ;
+					
+					//Lets now apply the impulse 
+			player.dy -= (impulse.y);
+				
+		}		
 	}
 
 
@@ -390,11 +380,9 @@
 					}
 					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
 						player.isCollidingWithWalls = true;
+						console.log("Hell its true")
 					}	
 
-					if(player.isColliding){
-						console.log(player.isColliding);
-					}
 		}
 
 	}
@@ -409,16 +397,17 @@
 			player.update();
 			player.draw();
 			player.isColliding = false;
+			player.isCollidingWithWalls = false;
 			detectCollision();
 			if(pourblood){
 				draw_blood();
 				GameOver()	;
 			}
-			
 			if(rotateToggle){
 				$('.box').toggleClass('box-rotate');
 				rotateToggle = false;
 			}
+			//console.log(player.dy)
 			
 		}
 		else{
