@@ -78,7 +78,7 @@
 		player.collidableWith = "floor";
 		player.restitution = 0.5;
 		
-		player.velocity = 3;
+		player.velocity = 3.4;
 		player.dx = 0;
 		player.dy = 0;
 		player.isJumping = false;
@@ -129,7 +129,7 @@
 			if(KeyStatus.up && !player.isJumping){
 				player.dy = -player.velocity * player.sign ;//* player.dt;
 				player.isJumping = true;
-				jumpCounter = 10;
+				jumpCounter = 12;
 				
 			}
 
@@ -273,30 +273,30 @@
 
 		//Problem with this is that vely is never 0 : fucking problem all over again
 		if(player.isColliding){	
-			if(vely<0){
+			if(vely<=0){
 
 				//normal force act down
 				norm.x = 0;
-				norm.y = -1;
+				norm.y = 1;
 			}
 
 			else if(vely>0){
 				//normal force act up
 				norm.x = 0;
-				norm.y = 1;
+				norm.y = -1;
 			}
 		}
 		
 		if(player.isCollidingWithWalls){
 			
-			if(velx>0){
+			if(velx>=0){
 			//normal force act left
-				norm.x = 1;
+				norm.x = -1;
 				norm.y = 0;
 			}
 			else if(velx<=0){
 				//normal force act right
-				norm.x = -1;
+				norm.x = 1;
 				norm.y = 0;
 			}
 		}
@@ -307,9 +307,6 @@
 	function resolveCollision(){
 		
 		var e = Math.min(player.restitution,0);
-		var Vb = {'x':0,'y':0};
-		var Va = {'x':player.dx ,'y':player.dy};
-
 		var normalUnitVector = SimplifyNormalForce();
 		var VelAlongNormal = 0 ;
 		var theta = 180;
@@ -318,26 +315,30 @@
 		//console.log(normalUnitVector)
 
 		if(normalUnitVector.x!=0 ){
+			
 			VelAlongNormal = player.velocity * Math.cos(theta*Math.PI/180);
 			var j = -(1+e)*VelAlongNormal;
 			j /= (1/player.mass);
 			impulse.x = j * normalUnitVector.x ;
 			
 			//Lets now apply the impulse 
-			player.dx -= 2*(impulse.x);
+			player.dx += (impulse.x);
 			console.log(impulse.x)
 		}
 
 		if(normalUnitVector.y!=0){ 
+
 			VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
+
 			j = -(1+e)*VelAlongNormal;
 			j /= (1/player.mass);
 
 			impulse.y = j * normalUnitVector.y ;
 					
-					//Lets now apply the impulse 
-			player.dy -= (impulse.y);
-				
+					//Lets now apply the impulse
+
+			console.log(player.dy)
+			player.dy += (impulse.y);
 		}		
 	}
 
@@ -370,19 +371,17 @@
 						player.isColliding = true;
 					}
 
-					else if(map.getAt(i, j-1) == collideColor && player.y-2*player.radius - ((j-1)*tileHeight+tileHeight) <= player.radius){
+					else if(map.getAt(i, j-1) == collideColor && player.y-player.radius/4- ((j-1)*tileHeight+tileHeight) <= player.radius){
 						player.isColliding = true;
-						//player.isCollidingWithCeiling = true;
 					}
 
 					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
 						player.isCollidingWithWalls = true;
+
 					}
 					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
 						player.isCollidingWithWalls = true;
-						console.log("Hell its true")
 					}	
-
 		}
 
 	}
