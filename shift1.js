@@ -78,14 +78,15 @@
 		player.collidableWith = "floor";
 		player.restitution = 0.5;
 		
-		player.velocity = 3.4;
+		player.velocity = 3.2;
 		player.dx = 0;
 		player.dy = 0;
 		player.isJumping = false;
 		player.gravity = 1;
-		player.dt = 0.5;
+		player.dt = 0.1;
 		player.isColliding = false;
 		player.mass = 1;
+		player.normal = {'x':0,'y':0};
 		// Portal values keeps toggling based on 		
 
 		player.portal = 1;
@@ -265,79 +266,39 @@
 		return (a.x*b.x + a.y*b.y)*Math.cos(theta*Math.PI/180);
 	}
 	
-	function SimplifyNormalForce(){
-
-		var velx = player.dx;
-		var vely = player.dy;
-		var norm = {'x':0,'y':0};
-
-		//Problem with this is that vely is never 0 : fucking problem all over again
-		if(player.isColliding){	
-			if(vely<=0){
-
-				//normal force act down
-				norm.x = 0;
-				norm.y = 1;
-			}
-
-			else if(vely>0){
-				//normal force act up
-				norm.x = 0;
-				norm.y = -1;
-			}
-		}
-		
-		if(player.isCollidingWithWalls){
-			
-			if(velx>=0){
-			//normal force act left
-				norm.x = -1;
-				norm.y = 0;
-			}
-			else if(velx<=0){
-				//normal force act right
-				norm.x = 1;
-				norm.y = 0;
-			}
-		}
-
-		return norm;
-	}
-
 	function resolveCollision(){
 		
 		var e = Math.min(player.restitution,0);
-		var normalUnitVector = SimplifyNormalForce();
 		var VelAlongNormal = 0 ;
 		var theta = 180;
 		var j;
 		var impulse = {}
 		//console.log(normalUnitVector)
 
-		if(normalUnitVector.x!=0 ){
+		if(player.normal.x!=0 ){
 			
 			VelAlongNormal = player.velocity * Math.cos(theta*Math.PI/180);
 			var j = -(1+e)*VelAlongNormal;
 			j /= (1/player.mass);
-			impulse.x = j * normalUnitVector.x ;
+			impulse.x = j * player.normal.x ;
 			
 			//Lets now apply the impulse 
 			player.dx += (impulse.x);
-			console.log(impulse.x)
 		}
 
-		if(normalUnitVector.y!=0){ 
-
-			VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
-
+		if(player.normal.y!=0){ 
+			
+			if(player.normal.y == 1){
+					VelAlongNormal = player.velocity * Math.cos(theta*Math.PI/180);
+			}
+			else{
+				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
+			}
 			j = -(1+e)*VelAlongNormal;
 			j /= (1/player.mass);
 
-			impulse.y = j * normalUnitVector.y ;
-					
-					//Lets now apply the impulse
-
-			console.log(player.dy)
+			impulse.y = j * player.normal.y ;
+			//Lets now apply the impulse
 			player.dy += (impulse.y);
 		}		
 	}
@@ -353,7 +314,7 @@
 		ctx.fillStyle=gradient;
 		ctx.fillText("GameOver !",canvas.width/2,canvas.height/2);
 	
-	}
+	}	
 
 	function detectCollision(){
 
@@ -369,18 +330,27 @@
 					
 					if(map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight-player.y<=player.radius){
 						player.isColliding = true;
+						player.normal.x = 0;
+						player.normal.y = -1;
 					}
 
 					else if(map.getAt(i, j-1) == collideColor && player.y-player.radius/4- ((j-1)*tileHeight+tileHeight) <= player.radius){
 						player.isColliding = true;
+						player.normal.x = 0;
+						player.normal.y = 1;
+						console.log("COMON")
 					}
 
 					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
 						player.isCollidingWithWalls = true;
+						player.normal.x = -1;
+						player.normal.y = 0;
 
 					}
 					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
 						player.isCollidingWithWalls = true;
+						player.normal.x = 1;
+						player.normal.y = 0;
 					}	
 		}
 
