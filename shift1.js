@@ -95,7 +95,6 @@
 
 		Vector.call(player,0,0,player.dx,player.dy);
 
-		var jumpCounter = 0;
 		player.update = function(){
 
 			if(KeyStatus.space){
@@ -130,15 +129,8 @@
 			if(KeyStatus.up && !player.isJumping){
 				player.dy = -player.velocity * player.sign ;//* player.dt;
 				player.isJumping = true;
-				jumpCounter = 12;
-				
+				KeyStatus.up = false;				
 			}
-
-			if(player.isJumping && jumpCounter){
-				player.dy = -player.velocity * player.sign ;
-			}
-
-			jumpCounter = Math.max(0,jumpCounter-1);
 
 
 			if(player.isColliding){
@@ -281,25 +273,25 @@
 			var j = -(1+e)*VelAlongNormal;
 			j /= (1/player.mass);
 			impulse.x = j * player.normal.x ;
-			
 			//Lets now apply the impulse 
-			player.dx += (impulse.x);
+			player.dx += 3*(impulse.x);
+			player.normal.x = 0;
 		}
 
 		if(player.normal.y!=0){ 
 			
 			if(player.normal.y == 1){
-					VelAlongNormal = player.velocity * Math.cos(theta*Math.PI/180);
+						VelAlongNormal = (player.velocity-player.dy) * Math.cos(theta*Math.PI/180);
 			}
 			else{
 				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
 			}
 			j = -(1+e)*VelAlongNormal;
 			j /= (1/player.mass);
-
 			impulse.y = j * player.normal.y ;
 			//Lets now apply the impulse
 			player.dy += (impulse.y);
+			player.normal.y = 0;
 		}		
 	}
 
@@ -328,30 +320,27 @@
 		if(typeof(map)!="undefined"){
 			var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
 					
-					if(map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight-player.y<=player.radius){
+					if((map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight-player.y<=player.radius)  || map.getAt(i,j)==collideColor){
 						player.isColliding = true;
-						player.normal.x = 0;
 						player.normal.y = -1;
 					}
 
-					else if(map.getAt(i, j-1) == collideColor && player.y-player.radius/4- ((j-1)*tileHeight+tileHeight) <= player.radius){
+					else if((map.getAt(i, j-1) == collideColor && player.y-player.radius/4- ((j-1)*tileHeight+tileHeight) <= player.radius) || map.getAt(i,j)==collideColor){
 						player.isColliding = true;
-						player.normal.x = 0;
 						player.normal.y = 1;
-						console.log("COMON")
 					}
 
-					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius) {
+					if((map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius)  || map.getAt(i,j)==collideColor) {
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
-						player.normal.y = 0;
 
 					}
-					else if(map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius) {
+					else if((map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius)  || map.getAt(i,j)==collideColor) {
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
-						player.normal.y = 0;
-					}	
+					
+					}
+
 		}
 
 	}
@@ -376,8 +365,6 @@
 				$('.box').toggleClass('box-rotate');
 				rotateToggle = false;
 			}
-			//console.log(player.dy)
-			
 		}
 		else{
 			GameOver();
