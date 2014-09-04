@@ -111,6 +111,7 @@
 				}
 				rotateToggle = rotateToggle^1;
 				KeyStatus.shift = false;
+				console.log(player.y)
 			}
 
 			if(KeyStatus.right){
@@ -159,7 +160,6 @@
 		};
 
 		player.draw = function(){
-
 			if(player.portal){
 				ctx.fillStyle = "black";
 				player.color = "black"; //black
@@ -172,14 +172,12 @@
 				ctx.fillStyle = "white";
 				player.color = "white"; //white
 				ctx.beginPath();
-				ctx.arc(player.x,player.y+5*player.radius,player.radius,0,2*Math.PI);
+				ctx.arc(player.x,player.y+3*player.radius,player.radius,0,2*Math.PI);
 				ctx.closePath();
 				ctx.fill();
 			}
-			
 		};
 		return player;
-
 	}(Object.create(Vector.prototype));
 
 	function Floor(x,y,value){
@@ -191,7 +189,7 @@
 		this.y = y;
 		this.width = 50;
 		this.height = 50;
-		this.color = (value==0xffffffff)?"black":(value==65535)?"green":"white";
+		this.color = (value==0xffffffff)?"black":(value==65535)?"green":(value==16711935)?"red":"white";
 		this.restitution = 0;
 		this.mass = Infinity ;
 
@@ -267,28 +265,26 @@
 		var impulse = {}
 
 		if(player.normal.x!=0 ){
-			
 			VelAlongNormal = player.velocity * Math.cos(theta*Math.PI/180);
 			var j = -(1+e)*VelAlongNormal;
 			j /= (1/player.mass);
-			impulse.x = j * player.normal.x ;
+			impulse.x = j * player.normal.x;	
 			//Lets now apply the impulse 
-			player.dx += 3*(impulse.x);
-		//	console.log(player.normal.x)
-			console.log(player.normal.x);			
+			player.dx += (impulse.x);		
 		}
 
 		if(player.normal.y!=0){ 
 			
 			if(player.normal.y == 1){
-						VelAlongNormal = (player.velocity-player.dy) * Math.cos(theta*Math.PI/180);
+				VelAlongNormal = (player.velocity-player.dy) * Math.cos(theta*Math.PI/180);
 			}
 			else{
 				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
 			}
+
 			j = -(1+e)*VelAlongNormal;
 			j /= (1/player.mass);
-			impulse.y = j * player.normal.y ;
+			impulse.y = j * player.normal.y;
 			//Lets now apply the impulse
 			player.dy += (impulse.y);
 		}
@@ -321,37 +317,32 @@
 		j = Math.floor(player.y/tileHeight);
 
 		if(typeof(map)!="undefined"){
-			var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
-					
-					if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
-						player.isColliding = true;
-						player.normal.y = -1;
-					}
+			
+				var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
+				if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
+					player.isColliding = true;
+					player.normal.y = -1*player.sign;
+				}
 
-					else if(map.getAt(i, j-1) == collideColor && player.y-player.radius/4- ((j-1)*tileHeight+tileHeight) <= player.radius){
-						player.isColliding = true;
-						player.normal.y = 1;
-					}
+				else if(map.getAt(i, j-1) == collideColor && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
+					player.isColliding = true;
+					player.normal.y = 1*player.sign;
+				}
 
-					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ //|| map.getAt(i,j)==collideColor)  {
-						player.isCollidingWithWalls = true;
-						player.normal.x = -1;
-
-					}
-					else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
-						player.isCollidingWithWalls = true;
-						player.normal.x = 1;
-					}
-
-					console.log(player.isCollidingWithWalls)
+				if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
+					player.isCollidingWithWalls = true;
+					player.normal.x = -1*player.sign;
+				}
+				else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
+					player.isCollidingWithWalls = true;
+					player.normal.x = 1*player.sign;
+				}
 		}
 
 	}
 
 	function animate(){
-
 		if(!finished){
-		
 			requestAnimFrame(animate);
 			ctx.clearRect(0,0,canvas.width,canvas.height);
 			updateTerrain();
@@ -367,12 +358,15 @@
 			if(rotateToggle){
 				$('.box').toggleClass('box-rotate');
 				rotateToggle = false;
+				var temp;
+				temp = player.y;
+				player.y = player.x;
+				player.x = temp;
 			}
 		}
 		else{
 			GameOver();
 		}
-
 	}
 
 	function loadMap(map){
@@ -414,7 +408,7 @@
 		var i, j, k;
 		for(i = 0; i < grid.width; i++) {
 			for(j = 0; j < grid.height; j++) {
-				var dat = ctx.getImageData(i, j, 1, 1); // x,y,width,height
+				var dat = ctx.getImageData(i, j, 1, 1); // x,y,width,height.its actually i,j
 				val = 0;
 				for(k = 0; k < 4; k++) {
 					val = val << 8 | dat.data[k];
