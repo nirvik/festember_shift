@@ -125,7 +125,6 @@
 				player.dx = 0;
 			}
 
-
 			if(KeyStatus.up && !player.isJumping){
 				player.dy = -player.velocity * player.sign ;//* player.dt;
 				player.isJumping = true;
@@ -134,9 +133,10 @@
 
 
 			if(player.isColliding){
+				//resolveCollision();
 				resolveCollision();
 			}
-
+	
 			else{				
 				player.dy+=(player.gravity * player.sign * player.dt) ;
 			}
@@ -148,6 +148,7 @@
 				player.isColliding = false;
 			}
 
+			resolveCollision();
 			this.advance();
 		};
 
@@ -226,7 +227,6 @@
 			ctx.fill();
 		}
 	}
-	//createBlood.prototype = Object.create(Vector.prototype);
 
 	function updateTerrain(){
 
@@ -265,7 +265,6 @@
 		var theta = 180;
 		var j;
 		var impulse = {}
-		//console.log(normalUnitVector)
 
 		if(player.normal.x!=0 ){
 			
@@ -275,7 +274,8 @@
 			impulse.x = j * player.normal.x ;
 			//Lets now apply the impulse 
 			player.dx += 3*(impulse.x);
-			player.normal.x = 0;
+		//	console.log(player.normal.x)
+			console.log(player.normal.x);			
 		}
 
 		if(player.normal.y!=0){ 
@@ -291,8 +291,11 @@
 			impulse.y = j * player.normal.y ;
 			//Lets now apply the impulse
 			player.dy += (impulse.y);
-			player.normal.y = 0;
-		}		
+		}
+
+		player.normal.x = 0;	
+		player.normal.y = 0;
+
 	}
 
 
@@ -320,27 +323,27 @@
 		if(typeof(map)!="undefined"){
 			var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
 					
-					if((map.getAt(i, j + 1) == collideColor && (j+1)*tileHeight-player.y<=player.radius)  || map.getAt(i,j)==collideColor){
+					if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = -1;
 					}
 
-					else if((map.getAt(i, j-1) == collideColor && player.y-player.radius/4- ((j-1)*tileHeight+tileHeight) <= player.radius) || map.getAt(i,j)==collideColor){
+					else if(map.getAt(i, j-1) == collideColor && player.y-player.radius/4- ((j-1)*tileHeight+tileHeight) <= player.radius){
 						player.isColliding = true;
 						player.normal.y = 1;
 					}
 
-					if((map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius)  || map.getAt(i,j)==collideColor) {
+					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ //|| map.getAt(i,j)==collideColor)  {
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 
 					}
-					else if((map.getAt(i-1 ,j) == collideColor && player.x - ((i-1)*tileWidth+tileWidth) <= player.radius)  || map.getAt(i,j)==collideColor) {
+					else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
-					
 					}
 
+					console.log(player.isCollidingWithWalls)
 		}
 
 	}
