@@ -140,11 +140,9 @@
 	
 			else{				
 				player.dy+=(player.gravity * player.sign * player.dt) ;
-				
 				if(Math.abs(player.dy)>=6){
 					player.dy = 4*player.sign; // Dont let it go beyond 6 as it fucks up the collision
 				}
-				console.log(player.dy)
 			}
 			
 			// If it just collides against the floor then its cool
@@ -166,7 +164,7 @@
 
 		player.draw = function(){
 			if(player.portal){
-				ctx.fillStyle = "green";
+				ctx.fillStyle = "black";
 				player.color = "black"; //black
 				ctx.beginPath();
 				ctx.arc(player.x,player.y,player.radius,0,2*Math.PI);
@@ -174,10 +172,10 @@
 				ctx.fill();
 			}
 			else {
-				ctx.fillStyle = "red";
+				ctx.fillStyle = "white";
 				player.color = "white"; //white
 				ctx.beginPath();
-				ctx.arc(player.x,player.y+5*player.radius,player.radius,0,2*Math.PI);
+				ctx.arc(player.x,player.y+2*player.radius,player.radius,0,2*Math.PI);
 				ctx.closePath();
 				ctx.fill();
 			}
@@ -217,14 +215,13 @@
 		this.radius = 3;
 
 		this.draw = function(){
-			
 			ctx.fillStyle = this.color;
 			ctx.beginPath();
 			if(player.portal){
-				ctx.arc(this.x,this.y,this.radius,Math.PI * 2,false);
+				ctx.arc(this.x,this.y-2*player.radius,this.radius,Math.PI * 2,false);
 			}
 			else{
-				ctx.arc(this.x,this.y+player.radius,this.radius,Math.PI * 2,false);
+				ctx.arc(this.x,this.y+2*player.radius,this.radius,Math.PI * 2,false);
 			}
 			ctx.closePath();
 			ctx.fill();
@@ -285,9 +282,6 @@
 			}
 			else{
 				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
-				//if(VelAlongNormal == 0){
-				//	VelAlongNormal = 0.39*Math.cos(theta*Math.PI/180);
-				//}
 			}
 
 			j = -(1+e)*VelAlongNormal;
@@ -295,7 +289,9 @@
 			impulse.y = j * player.normal.y;
 			//Lets now apply the impulse
 			player.dy += (impulse.y);
-			//console.log(impulse.y)
+			if(player.isColliding){
+				console.log(player.dy);
+			}
 		}
 
 		player.normal.x = 0;	
@@ -322,22 +318,35 @@
 		var tileWidth = 50;
 		var tileHeight = 50;
 
-		// When we invert the map i think we should change this too 
 		i = Math.floor(player.x/tileWidth);
 		j = Math.floor(player.y/tileHeight);
 
 		if(typeof(map)!="undefined"){
 			
 				var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
-				if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
-					player.isColliding = true;
-					player.normal.y = -1*player.sign;
 
+				if(player.sign>0){
+					if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
+						player.isColliding = true;
+						player.normal.y = -1;
+					}
+
+					else if(map.getAt(i, j-1) == collideColor && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
+						player.isColliding = true;
+						player.normal.y = 1;
+					}
 				}
 
-				else if(map.getAt(i, j-1) == collideColor && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
-					player.isColliding = true;
-					player.normal.y = 1*player.sign;
+				else{
+					if(map.getAt(i, j) == collideColor  && j*tileHeight+tileHeight-player.y<=player.radius ){
+						player.isColliding = true;
+						player.normal.y = 1*player.sign;	
+					}
+
+					else if(map.getAt(i, j+1) == collideColor && ((j+1)*tileHeight) - player.y-player.radius/4<= player.radius){
+						player.isColliding = true;
+						player.normal.y = -1*player.sign;
+					}
 				}
 
 				if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
@@ -366,10 +375,12 @@
 				draw_blood();
 				GameOver()	;
 			}
+
 			if(rotateToggle){
 				$('.box').toggleClass('box-rotate');
 				rotateToggle = false;
 			}
+			
 		}
 		else{
 			GameOver();
