@@ -111,7 +111,6 @@
 				}
 				rotateToggle = rotateToggle^1;
 				KeyStatus.shift = false;
-			//	console.log(player.y)
 			}
 
 			if(KeyStatus.right){
@@ -289,9 +288,7 @@
 			impulse.y = j * player.normal.y;
 			//Lets now apply the impulse
 			player.dy += (impulse.y);
-			if(player.isColliding){
-				console.log(player.dy);
-			}
+			
 		}
 
 		player.normal.x = 0;	
@@ -335,6 +332,15 @@
 						player.isColliding = true;
 						player.normal.y = 1;
 					}
+
+					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
+						player.isCollidingWithWalls = true;
+						player.normal.x = -1;
+					}
+					else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
+						player.isCollidingWithWalls = true;
+						player.normal.x = 1;
+					}
 				}
 
 				else{
@@ -347,16 +353,19 @@
 						player.isColliding = true;
 						player.normal.y = -1*player.sign;
 					}
+
+					console.log(player.dx);
+					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
+						player.isCollidingWithWalls = true;
+						player.normal.x = -1;
+					}
+					else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
+						player.isCollidingWithWalls = true;
+						player.normal.x = 1;
+					}
+
 				}
 
-				if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
-					player.isCollidingWithWalls = true;
-					player.normal.x = -1;
-				}
-				else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
-					player.isCollidingWithWalls = true;
-					player.normal.x = 1;
-				}
 		}
 
 	}
@@ -375,12 +384,12 @@
 				draw_blood();
 				GameOver()	;
 			}
-
+/*
 			if(rotateToggle){
 				$('.box').toggleClass('box-rotate');
 				rotateToggle = false;
-			}
-			
+			}	
+*/
 		}
 		else{
 			GameOver();
