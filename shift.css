@@ -1,12 +1,13 @@
 .box {
-
-	width: 400px;
-	height:  400px;
-	margin: 20px auto;
+	width: 500px;
+	height: 500px;
+	margin: 0px auto;
+	border: thick outset aqua;
 	transition: -webkit-transform 0.5s linear;
 	-webkit-transform-origin: center center;
 	-webkit-transform-style : preserve-3D;
 } 
 .box-rotate {
 	-webkit-transform : rotate(180deg);
+	-webkit-transform-origin: center center;
 }
