@@ -15,6 +15,7 @@
 	var pourblood = false;
 	var rotateToggle = 0;
 	var map;
+	var spawn = {'x':0,'y':0};
 
 
 	window.requestAnimFrame = function(){
@@ -157,8 +158,8 @@
 
 		player.reset = function(){
 
-			player.x = 130;
-			player.y = 200;
+			player.x = spawn.x;
+			player.y = spawn.y;
 		};
 
 		player.draw = function(){
@@ -276,8 +277,9 @@
 
 		if(player.normal.y!=0){ 
 			
-			if(player.normal.y == 1 ){
-				VelAlongNormal = (player.velocity-player.dy) * Math.cos(theta*Math.PI/180);
+			if(player.normal.y == 1 || (player.normal.y==1 && player.sign<0) ){
+				console.log(player.normal.y==1 && player.sign<0)
+				VelAlongNormal = (player.velocity-player.dy) * Math.cos(theta*Math.PI/180) * player.sign;
 			}
 			else{
 				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
@@ -297,7 +299,7 @@
 	}
 
 
-	function GameOver(){
+	function GameOver(msg){
 		ctx.font="30px Verdana";
 		var gradient=ctx.createLinearGradient(0,0,canvas.width,0);
 		gradient.addColorStop("0","magenta");
@@ -305,7 +307,7 @@
 		gradient.addColorStop("1.0","red");
 		// Fill with gradient
 		ctx.fillStyle=gradient;
-		ctx.fillText("GameOver !",canvas.width/2,canvas.height/2);
+		ctx.fillText(msg,canvas.width/2,canvas.height/2);
 	
 	}	
 
@@ -337,6 +339,7 @@
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 					}
+
 					else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
@@ -344,27 +347,28 @@
 				}
 
 				else{
+					console.log("collideColor "+collideColor+" color of map "+map.getAt(i+1,j));
 					if(map.getAt(i, j) == collideColor  && j*tileHeight+tileHeight-player.y<=player.radius ){
 						player.isColliding = true;
-						player.normal.y = 1*player.sign;	
+						player.normal.y = 1*player.sign;
 					}
 
-					else if(map.getAt(i, j+1) == collideColor && ((j+1)*tileHeight) - player.y-player.radius/4<= player.radius){
+					else if(map.getAt(i, j+1) == collideColor &&  ((j+1)*tileHeight)-player.y-player.radius/4 <= player.radius){
 						player.isColliding = true;
 						player.normal.y = -1*player.sign;
 					}
-
-					console.log(player.dx);
-					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
+					if(map.getAt(i,j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 					}
-					else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
+
+					else if(map.getAt(i-1,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 					}
-
+					
 				}
+
 
 		}
 
@@ -384,12 +388,12 @@
 				draw_blood();
 				GameOver()	;
 			}
-/*
+
 			if(rotateToggle){
 				$('.box').toggleClass('box-rotate');
 				rotateToggle = false;
 			}	
-*/
+
 		}
 		else{
 			GameOver();
@@ -401,7 +405,12 @@
 		var i,j;
 		for(i=0;i<map.width;i++){
 			for(j=0;j<map.height;j++){
-				terrain.push(new Floor(i*50,j*50,map.getAt(i,j))); //
+				terrain.push(new Floor(i*50,j*50,map.getAt(i,j)));
+				if(map.getAt(i,j)==16711935){
+					spawn.x = i*50 + 50/2;
+					spawn.y = j*50 + 50/2;
+					player.reset();
+				}
 			}
 		}
 	}
@@ -414,9 +423,7 @@
 			map = parseMap(img);
 			console.log(map);
 			loadMap(map);
-
 		}
-		player.reset();
 		animate();
 	}
 
