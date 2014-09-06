@@ -103,7 +103,7 @@
 				pourblood = true;
 			}
 
-			if(KeyStatus.shift){				
+			if(KeyStatus.shift  && player.isColliding ){				
 				player.portal = player.portal^1; //Invert the physics metrics 
 				if(player.portal){
 					player.sign = 1;
@@ -194,7 +194,7 @@
 		this.y = y;
 		this.width = 50;
 		this.height = 50;
-		this.color = (value==0xffffffff)?"black":(value==65535)?"green":(value==16711935)?"red":"white";
+		this.color = (value==0xffffffff)?"white":(value==65535)?"blue":(value==16711935)?"green":"black";
 		this.restitution = 0;
 		this.mass = Infinity ;
 
@@ -267,7 +267,6 @@
 		var theta = 180;
 		var j;
 		var impulse = {}
-
 		if(player.normal.x!=0 ){
 			VelAlongNormal = player.velocity * Math.cos(theta*Math.PI/180);
 			var j = -(1+e)*VelAlongNormal;
@@ -281,7 +280,8 @@
 			
 			if(player.normal.y == 1 || (player.normal.y==1 && player.sign<0) ){
 				//console.log(player.normal.y==1 && player.sign<0)
-				VelAlongNormal = (player.velocity-player.dy) * Math.cos(theta*Math.PI/180) * player.sign;
+				VelAlongNormal = (player.velocity-player.dy*player.sign) * Math.cos(theta*Math.PI/180) * player.sign;
+				console.log(player.velocity-player.dy*player.sign)	
 			}
 			else{
 				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
@@ -291,8 +291,7 @@
 			j /= (1/player.mass);
 			impulse.y = j * player.normal.y;
 			//Lets now apply the impulse
-			player.dy += (impulse.y);
-			
+			player.dy += (impulse.y);			
 		}
 
 		player.normal.x = 0;	
@@ -322,10 +321,10 @@
 		i = Math.floor(player.x/tileWidth);
 		j = Math.floor(player.y/tileHeight);
 		
-		
+
 		if(typeof(map)!="undefined"){
 			
-				var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
+				var collideColor = (player.color == "black") ? 0xff : 0xffffffff;
 				if(player.sign>0){
 				
 					if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
@@ -367,7 +366,7 @@
 						console.log("is colliding")
 					}
 
-					else if(map.getAt(i-1,j+1) == collideColor && player.x-player.radius/4- (i)*tileWidth <= player.radius ){
+					else if(map.getAt(i-1,j+1) == collideColor && player.x-player.radius- (i)*tileWidth <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 					}	
