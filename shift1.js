@@ -16,6 +16,7 @@
 	var rotateToggle = 0;
 	var map;
 	var spawn = {'x':0,'y':0};
+	var dest = {'x':0,'y':0};
 
 
 	window.requestAnimFrame = function(){
@@ -116,11 +117,11 @@
 			}
 
 			if(KeyStatus.right){
-				player.dx = player.velocity * player.sign;// * player.dt;
+				player.dx = player.velocity * player.sign;
 			}
 
 			if(KeyStatus.left){
-				player.dx = -player.velocity * player.sign;// * player.dt;
+				player.dx = -player.velocity * player.sign;
 			}
 
 			if(!KeyStatus.left && !KeyStatus.right){
@@ -128,9 +129,9 @@
 			}
 
 			if(KeyStatus.up && !player.isJumping){
-				player.dy = -player.velocity * player.sign ;//* player.dt;
+				player.dy = -player.velocity * player.sign;
 				player.isJumping = true;
-				KeyStatus.up = false;				
+				KeyStatus.up = false;
 			}
 
 
@@ -321,10 +322,10 @@
 		i = Math.floor(player.x/tileWidth);
 		j = Math.floor(player.y/tileHeight);
 		
+		
 		if(typeof(map)!="undefined"){
 			
 				var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
-
 				if(player.sign>0){
 				
 					if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
@@ -350,7 +351,7 @@
 
 				else{
 					//console.log("collideColor "+collideColor+" color of map "+map.getAt(i,j));
-					console.log(player.y+","+j*tileHeight)
+					//console.log(player.y+","+j*tileHeight)
 					if(map.getAt(i, j) == collideColor  && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
@@ -363,6 +364,7 @@
 					if(map.getAt(i+1,j+1) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
+						console.log("is colliding")
 					}
 
 					else if(map.getAt(i-1,j+1) == collideColor && player.x-player.radius/4- (i)*tileWidth <= player.radius ){
@@ -370,6 +372,12 @@
 						player.normal.x = 1;
 					}	
 				}
+
+				if(player.y <= 0){
+					pourblood = true;
+				}
+
+
 		}
 
 	}
@@ -410,6 +418,10 @@
 					spawn.x = i*50 + 50/2;
 					spawn.y = j*50 + 50/2;
 					player.reset();
+				}
+				else if(map.getAt(i,j)==65535){
+					dest.x = i*50;
+					dest.y = j*50;
 				}
 			}
 		}
