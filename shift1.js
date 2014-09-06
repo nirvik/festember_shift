@@ -278,7 +278,7 @@
 		if(player.normal.y!=0){ 
 			
 			if(player.normal.y == 1 || (player.normal.y==1 && player.sign<0) ){
-				console.log(player.normal.y==1 && player.sign<0)
+				//console.log(player.normal.y==1 && player.sign<0)
 				VelAlongNormal = (player.velocity-player.dy) * Math.cos(theta*Math.PI/180) * player.sign;
 			}
 			else{
@@ -347,8 +347,9 @@
 				}
 
 				else{
-					console.log("collideColor "+collideColor+" color of map "+map.getAt(i+1,j));
-					if(map.getAt(i, j) == collideColor  && j*tileHeight+tileHeight-player.y<=player.radius ){
+					//console.log("collideColor "+collideColor+" color of map "+map.getAt(i,j));
+					console.log(player.y)
+					if(map.getAt(i, j) == collideColor  && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
 					}
@@ -356,13 +357,14 @@
 					else if(map.getAt(i, j+1) == collideColor &&  ((j+1)*tileHeight)-player.y-player.radius/4 <= player.radius){
 						player.isColliding = true;
 						player.normal.y = -1*player.sign;
+						
 					}
-					if(map.getAt(i,j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
+					if(map.getAt(i,j-1) == collideColor && (i)*tileWidth+tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 					}
 
-					else if(map.getAt(i-1,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
+					else if(map.getAt(i,j-1) == collideColor && player.x-player.radius/4- (i)*tileWidth <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 					}
