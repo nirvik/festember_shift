@@ -112,6 +112,7 @@
 				}
 				rotateToggle = rotateToggle^1;
 				KeyStatus.shift = false;
+				player.y = player.y - (player.radius)*player.sign;
 			}
 
 			if(KeyStatus.right){
@@ -319,12 +320,13 @@
 
 		i = Math.floor(player.x/tileWidth);
 		j = Math.floor(player.y/tileHeight);
-
+		
 		if(typeof(map)!="undefined"){
 			
 				var collideColor = (player.color == "black") ? 0xffffffff : 0xff;
 
 				if(player.sign>0){
+				
 					if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = -1;
@@ -348,7 +350,7 @@
 
 				else{
 					//console.log("collideColor "+collideColor+" color of map "+map.getAt(i,j));
-					console.log(player.y)
+					console.log(player.y+","+j*tileHeight)
 					if(map.getAt(i, j) == collideColor  && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
@@ -357,21 +359,17 @@
 					else if(map.getAt(i, j+1) == collideColor &&  ((j+1)*tileHeight)-player.y-player.radius/4 <= player.radius){
 						player.isColliding = true;
 						player.normal.y = -1*player.sign;
-						
 					}
-					if(map.getAt(i,j-1) == collideColor && (i)*tileWidth+tileWidth - player.x <= player.radius){ 
+					if(map.getAt(i+1,j+1) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 					}
 
-					else if(map.getAt(i,j-1) == collideColor && player.x-player.radius/4- (i)*tileWidth <= player.radius ){
+					else if(map.getAt(i-1,j+1) == collideColor && player.x-player.radius/4- (i)*tileWidth <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
-					}
-					
+					}	
 				}
-
-
 		}
 
 	}
