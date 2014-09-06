@@ -281,7 +281,7 @@
 			if(player.normal.y == 1 || (player.normal.y==1 && player.sign<0) ){
 				//console.log(player.normal.y==1 && player.sign<0)
 				VelAlongNormal = (player.velocity-player.dy*player.sign) * Math.cos(theta*Math.PI/180) * player.sign;
-				console.log(player.velocity-player.dy*player.sign)	
+				//console.log(player.velocity-player.dy*player.sign)	
 			}
 			else{
 				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
@@ -318,15 +318,45 @@
 		var tileWidth = 50;
 		var tileHeight = 50;
 
-		i = Math.floor(player.x/tileWidth);
-		j = Math.floor(player.y/tileHeight);
-		
+		if(player.sign>0){
+			i = Math.floor(player.x/tileWidth);
+			j = Math.floor(player.y/tileHeight);
+			console.log(j*50)
+		}
+		else{
+
+			i = Math.floor(player.x/tileWidth);
+			j = Math.floor(player.y/tileHeight);
+			console.log(j*50)	
+		}			
 
 		if(typeof(map)!="undefined"){
 			
 				var collideColor = (player.color == "black") ? 0xff : 0xffffffff;
 				if(player.sign>0){
-				
+					
+					//Map end Boundary checks 
+					if((j+1)*tileHeight-player.y<=player.radius && player.y+2*player.radius>=canvas.height){
+						player.isColliding = true;
+						player.normal.y = -1;
+					}
+
+					else if(player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius && player.y-player.radius<=0){
+						player.isColliding = true;
+						player.normal.y =1;
+					}
+
+					if((i+1)*tileWidth - player.x <= player.radius && player.x+player.radius>=canvas.width){ 
+						player.isCollidingWithWalls = true;
+						player.normal.x = -1;
+					}
+
+					else if(player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius && player.x-player.radius<=0){
+						player.isCollidingWithWalls = true;
+						player.normal.x = 1;
+					}
+					// End of boundary checking 
+
 					if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = -1;
@@ -356,14 +386,13 @@
 						player.normal.y = 1*player.sign;
 					}
 
-					else if(map.getAt(i, j+1) == collideColor &&  ((j+1)*tileHeight)-player.y-player.radius/4 <= player.radius){
+					else if(map.getAt(i, j+1) == collideColor &&  ((j+1)*tileHeight)-player.y-player.radius<= player.radius){
 						player.isColliding = true;
 						player.normal.y = -1*player.sign;
 					}
 					if(map.getAt(i+1,j+1) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
-						console.log("is colliding")
 					}
 
 					else if(map.getAt(i-1,j+1) == collideColor && player.x-player.radius- (i)*tileWidth <= player.radius ){
