@@ -1,5 +1,12 @@
 (function(){
 
+	/* Todo
+		AssetLoader
+		GameOver Clause when you step over thorns
+		Incorporate thorns
+		Load the next level when dest reached
+		Make the map boundary condition for the white world
+	*/
 
 	var canvas = document.getElementById("mycanvas"),
 	ctx = canvas.getContext("2d");
@@ -32,6 +39,61 @@
 	    );
 	}();
 
+	
+	var AssetLoader = function(){
+
+		this.imgs = {
+			'thorns' : './imgs/thorns.png',
+			'level1' : './imgs/level1.png'
+		};
+
+		this.total = Object.keys(this.imgs).length;
+		var loaded = 0;
+
+		this.load = function(dic,name){
+			
+			if(this[dic][name].status != "loading"){
+				return;
+			}
+			else{
+				this[dic][name].status = "loaded";
+				loaded+=1;
+
+				if(loaded == this.total){
+					console.log("All resources have been loaded");
+					startGame();
+				}
+			}
+		};
+
+		this.downloadAll = function(){
+
+			var src;
+			var _this = this;
+			
+			for(var img in this.imgs){
+				src = _this.imgs[img];
+				(function(_this,img){
+					_this.imgs[img] = new Image();
+					_this.imgs[img].status = "loading";
+					_this.imgs[img].src = src;
+					_this.imgs[img].name = img;
+					_this.imgs[img].onload = function(){
+							load.call(_this,"imgs",img);
+					}
+				})(_this,img);
+			}
+		};
+
+		return {
+			imgs : this.imgs,
+			downloadAll : this.downloadAll,
+			load : this.load,
+			total : this.total
+		}
+
+	}();
+	
 	var KeyStatus = {};
 	
 	var KeyCode = {
@@ -279,9 +341,7 @@
 		if(player.normal.y!=0){ 
 			
 			if(player.normal.y == 1 || (player.normal.y==1 && player.sign<0) ){
-				//console.log(player.normal.y==1 && player.sign<0)
 				VelAlongNormal = (player.velocity-player.dy*player.sign) * Math.cos(theta*Math.PI/180) * player.sign;
-				//console.log(player.velocity-player.dy*player.sign)	
 			}
 			else{
 				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
@@ -301,6 +361,8 @@
 
 
 	function GameOver(msg){
+
+		
 		ctx.font="30px Verdana";
 		var gradient=ctx.createLinearGradient(0,0,canvas.width,0);
 		gradient.addColorStop("0","magenta");
@@ -309,7 +371,7 @@
 		// Fill with gradient
 		ctx.fillStyle=gradient;
 		ctx.fillText(msg,canvas.width/2,canvas.height/2);
-	
+		
 	}	
 
 	function detectCollision(){
@@ -318,18 +380,9 @@
 		var tileWidth = 50;
 		var tileHeight = 50;
 
-		if(player.sign>0){
-			i = Math.floor(player.x/tileWidth);
-			j = Math.floor(player.y/tileHeight);
-			console.log(j*50)
-		}
-		else{
-
-			i = Math.floor(player.x/tileWidth);
-			j = Math.floor(player.y/tileHeight);
-			console.log(j*50)	
-		}			
-
+		i = Math.floor(player.x/tileWidth);
+		j = Math.floor(player.y/tileHeight);
+	
 		if(typeof(map)!="undefined"){
 			
 				var collideColor = (player.color == "black") ? 0xff : 0xffffffff;
@@ -441,29 +494,22 @@
 		var i,j;
 		for(i=0;i<map.width;i++){
 			for(j=0;j<map.height;j++){
-				terrain.push(new Floor(i*50,j*50,map.getAt(i,j)));
 				if(map.getAt(i,j)==16711935){
 					spawn.x = i*50 + 50/2;
 					spawn.y = j*50 + 50/2;
 					player.reset();
 				}
-				else if(map.getAt(i,j)==65535){
-					dest.x = i*50;
-					dest.y = j*50;
-				}
+				terrain.push(new Floor(i*50,j*50,map.getAt(i,j)));
 			}
 		}
 	}
 
 	function startGame(){
 
-		var img = new Image();
-		img.src = 'level1.png';
-		img.onload = function() {
-			map = parseMap(img);
-			console.log(map);
-			loadMap(map);
-		}
+		map = parseMap(AssetLoader.imgs['level1']);
+		console.log(map);
+		loadMap(map);
+
 		animate();
 	}
 
@@ -476,6 +522,10 @@
 		
 		grid.getAt = function(i, j) {
 			return grid[i * grid.width + j];
+		}
+
+		grid.assign = function(i,k,value){
+			grid[i*grid.width + j] = value;
 		}
 
 		ctx.drawImage(image, 0, 0);
@@ -492,6 +542,6 @@
 		}
 		return grid;
 	}
-	startGame();
-
+	//startGame();
+	AssetLoader.downloadAll();
 })()
