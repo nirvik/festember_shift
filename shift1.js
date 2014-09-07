@@ -257,7 +257,7 @@
 		this.y = y;
 		this.width = 50;
 		this.height = 50;
-		this.color = (value==0xffffffff)?"white":(value==65535)?"blue":(value==16711935)?"green":"black";
+		this.color = (value==0xffffffff)?"white":(value==65535)?"blue":(value==16711935)?"green":(value==4278190335)?"red":"black";
 		this.restitution = 0;
 		this.mass = Infinity ;
 
@@ -385,7 +385,8 @@
 		j = Math.floor(player.y/tileHeight);
 	
 		if(typeof(map)!="undefined"){
-			
+				
+				var deathColor = 4278190335;
 				var collideColor = (player.color == "black") ? 0xff : 0xffffffff;
 				if(player.sign>0){
 					
@@ -411,24 +412,36 @@
 					}
 					// End of boundary checking 
 
-					if(map.getAt(i, j + 1) == collideColor  && (j+1)*tileHeight-player.y<=player.radius ){
+					if((map.getAt(i, j + 1) == collideColor || map.getAt(i,j+1)==deathColor) && (j+1)*tileHeight-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = -1;
+						if(map.getAt(i,j+1)==deathColor){
+							pourblood = true;
+						}
 					}
 
-					else if(map.getAt(i, j-1) == collideColor && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
+					else if((map.getAt(i, j-1) == collideColor || map.getAt(i,j-1)==deathColor) && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
 						player.isColliding = true;
 						player.normal.y = 1;
+						if(map.getAt(i,j-1)==deathColor){
+							pourblood = true;
+						}
 					}
 
-					if(map.getAt(i + 1, j) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
+					if((map.getAt(i + 1, j) == collideColor || map.getAt(i+1,j)==deathColor) && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
+						if(map.getAt(i+1,j)==deathColor){
+							pourblood = true;
+						}
 					}
 
-					else if(map.getAt(i-1 ,j) == collideColor && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
+					else if((map.getAt(i-1 ,j) == collideColor || map.getAt(i-1,j)==deathColor) && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
+						if(map.getAt(i-1,j)==deathColor){
+							pourblood = true;
+						}
 					}
 				}
 
@@ -456,30 +469,37 @@
 					}
 					// End of boundary checking 
 
-					if(map.getAt(i, j) == collideColor  && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
+					if((map.getAt(i, j) == collideColor || map.getAt(i,j)==deathColor) && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
+						if(map.getAt(i,j)==deathColor){
+							pourblood = true;
+						}
 					}
 
-					else if(map.getAt(i, j+1) == collideColor &&  ((j+1)*tileHeight)-player.y-player.radius<= player.radius){
+					else if((map.getAt(i, j+1) == collideColor || map.getAt(i,j+1)==deathColor) &&  ((j+1)*tileHeight)-player.y-player.radius<= player.radius){
 						player.isColliding = true;
 						player.normal.y = -1*player.sign;
+						if(map.getAt(i,j+1)==deathColor){
+							pourblood = true;
+						}
 					}
-					if(map.getAt(i+1,j+1) == collideColor && (i+1)*tileWidth - player.x <= player.radius){ 
+					if((map.getAt(i+1,j+1) == collideColor || map.getAt(i+1,j+1)==deathColor) && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
+						if(map.getAt(i+1,j+1)==deathColor){
+							pourblood = true;
+						}
 					}
 
-					else if(map.getAt(i-1,j+1) == collideColor && player.x-player.radius- (i)*tileWidth <= player.radius ){
+					else if((map.getAt(i-1,j+1) == collideColor || map.getAt(i-1,j+1)==deathColor) && player.x-player.radius- (i)*tileWidth <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
+						if(map.getAt(i-1,j+1)==deathColor){
+							pourblood = true;
+						}
 					}	
 				}
-/*
-				if(player.y <= 0){
-					pourblood = true;
-				}
-*/
 
 		}
 
@@ -497,7 +517,7 @@
 			detectCollision();
 			if(pourblood){
 				draw_blood();
-				GameOver()	;
+				GameOver("YOU ARE FUCKED ")	;
 			}
 
 			if(rotateToggle){
