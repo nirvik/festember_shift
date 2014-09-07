@@ -44,7 +44,8 @@
 
 		this.imgs = {
 			'thorns' : './imgs/thorns.png',
-			'level1' : './imgs/level1.png'
+			'level1' : './imgs/level1.png',
+			'level2' : './imgs/level2.png'
 		};
 
 		this.total = Object.keys(this.imgs).length;
@@ -389,22 +390,22 @@
 				if(player.sign>0){
 					
 					//Map end Boundary checks 
-					if((j+1)*tileHeight-player.y<=player.radius && player.y+2*player.radius>=canvas.height){
+					if(player.y+2*player.radius>=canvas.height){
 						player.isColliding = true;
 						player.normal.y = -1;
 					}
 
-					else if(player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius && player.y-player.radius<=0){
+					else if(player.y-player.radius<=0){
 						player.isColliding = true;
 						player.normal.y =1;
 					}
 
-					if((i+1)*tileWidth - player.x <= player.radius && player.x+player.radius>=canvas.width){ 
+					if(player.x+player.radius>=canvas.width){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 					}
 
-					else if(player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius && player.x-player.radius<=0){
+					else if(player.x-player.radius<=0){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 					}
@@ -432,8 +433,29 @@
 				}
 
 				else{
-					//console.log("collideColor "+collideColor+" color of map "+map.getAt(i,j));
-					//console.log(player.y+","+j*tileHeight)
+
+					//Map boundary checks 
+					if(player.y+2*player.radius<=0){
+						player.isColliding = true;
+						player.normal.y = 1*player.sign;
+					}
+
+					else if(player.y-player.radius>=canvas.height){
+						player.isColliding = true;
+						player.normal.y =-1*player.sign;
+					}
+
+					if(player.x+player.radius>=canvas.width){ 
+						player.isCollidingWithWalls = true;
+						player.normal.x = 1*player.sign;
+					}
+
+					else if(player.x-player.radius<=0){
+						player.isCollidingWithWalls = true;
+						player.normal.x = -1*player.sign;
+					}
+					// End of boundary checking 
+
 					if(map.getAt(i, j) == collideColor  && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
@@ -453,11 +475,11 @@
 						player.normal.x = 1;
 					}	
 				}
-
+/*
 				if(player.y <= 0){
 					pourblood = true;
 				}
-
+*/
 
 		}
 
@@ -506,7 +528,7 @@
 
 	function startGame(){
 
-		map = parseMap(AssetLoader.imgs['level1']);
+		map = parseMap(AssetLoader.imgs['level2']);
 		console.log(map);
 		loadMap(map);
 
