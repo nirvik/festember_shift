@@ -152,12 +152,16 @@
 
 		player.portal = 1;
 		player.sign = 1;
-		player.color = "black"
+		player.color = "black";
+		player.onObstacle = false;
 
 		Vector.call(player,0,0,player.dx,player.dy);
 
 		player.update = function(){
 
+			if(player.onObstacle){
+				KeyStatus.shift = false;
+			}
 
 			if(KeyStatus.shift  && player.isColliding ){				
 				player.portal = player.portal^1; //Invert the physics metrics 
@@ -387,6 +391,7 @@
 		if(typeof(map)!="undefined"){
 				
 				var deathColor = 4278190335;
+				var obstacleColor = 4294902015;
 				var collideColor = (player.color == "black") ? 0xff : 0xffffffff;
 				if(player.sign>0){
 					
@@ -412,28 +417,36 @@
 					}
 					// End of boundary checking 
 
-					if((map.getAt(i, j + 1) == collideColor || map.getAt(i,j+1)==deathColor) && (j+1)*tileHeight-player.y<=player.radius ){
+					if((map.getAt(i, j + 1) == collideColor || map.getAt(i,j+1)==deathColor || map.getAt(i,j+1)==obstacleColor) && (j+1)*tileHeight-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = -1;
 						if(map.getAt(i,j+1)==deathColor){
 							pourblood = true;
 						}
+
+						if(map.getAt(i,j+1)==obstacleColor){
+							player.onObstacle = true;
+						}
 					}
 
-					else if((map.getAt(i, j-1) == collideColor || map.getAt(i,j-1)==deathColor) && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
+					else if((map.getAt(i, j-1) == collideColor || map.getAt(i,j-1)==deathColor || map.getAt(i,j-1)==obstacleColor) && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
 						player.isColliding = true;
 						player.normal.y = 1;
 						if(map.getAt(i,j-1)==deathColor){
 							pourblood = true;
 						}
+
+						if(map.getAt(i,j-1)==obstacleColor){
+							player.onObstacle = true;
+						}
 					}
 
-					if((map.getAt(i + 1, j) == collideColor || map.getAt(i+1,j)==deathColor) && (i+1)*tileWidth - player.x <= player.radius){ 
+					if((map.getAt(i + 1, j) == collideColor || map.getAt(i+1,j)==deathColor ||  map.getAt(i+1,j)==obstacleColor) && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 					}
 
-					else if((map.getAt(i-1 ,j) == collideColor || map.getAt(i-1,j)==deathColor) && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
+					else if((map.getAt(i-1 ,j) == collideColor || map.getAt(i-1,j)==deathColor || map.getAt(i-1,j)==obstacleColor) && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 					}
@@ -463,27 +476,35 @@
 					}
 					// End of boundary checking 
 
-					if((map.getAt(i, j) == collideColor || map.getAt(i,j)==deathColor) && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
+					if((map.getAt(i, j) == collideColor || map.getAt(i,j)==deathColor || map.getAt(i,j)==obstacleColor) && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
 						if(map.getAt(i,j)==deathColor){
 							pourblood = true;
 						}
+
+						if(map.getAt(i,j)==obstacleColor){
+							player.onObstacle = true;
+						}
 					}
 
-					else if((map.getAt(i, j+1) == collideColor || map.getAt(i,j+1)==deathColor) &&  ((j+1)*tileHeight)-player.y-player.radius<= player.radius){
+					else if((map.getAt(i, j+1) == collideColor || map.getAt(i,j+1)==deathColor || map.getAt(i,j+1)==obstacleColor) &&  ((j+1)*tileHeight)-player.y-player.radius<= player.radius){
 						player.isColliding = true;
 						player.normal.y = -1*player.sign;
 						if(map.getAt(i,j+1)==deathColor){
 							pourblood = true;
 						}
+
+						if(map.getAt(i,j+1)==obstacleColor){
+							player.onObstacle = true;
+						}
 					}
-					if((map.getAt(i+1,j+1) == collideColor || map.getAt(i+1,j+1)==deathColor) && (i+1)*tileWidth - player.x <= player.radius){ 
+					if((map.getAt(i+1,j+1) == collideColor || map.getAt(i+1,j+1)==deathColor || map.getAt(i+1,j+1)==obstacleColor) && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 					}
 
-					else if((map.getAt(i-1,j+1) == collideColor || map.getAt(i-1,j+1)==deathColor) && player.x-player.radius- (i)*tileWidth <= player.radius ){
+					else if((map.getAt(i-1,j+1) == collideColor || map.getAt(i-1,j+1)==deathColor || map.getAt(i-1,j+1)==obstacleColor) && player.x-player.radius- (i)*tileWidth <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 					}	
@@ -502,6 +523,7 @@
 			player.draw();
 			player.isColliding = false;
 			player.isCollidingWithWalls = false;
+			player.onObstacle = false;
 			detectCollision();
 			if(pourblood){
 				draw_blood();
