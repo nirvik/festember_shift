@@ -1,11 +1,8 @@
 (function(){
 
 	/* Todo
-		AssetLoader
-		GameOver Clause when you step over thorns
-		Incorporate thorns
+
 		Load the next level when dest reached
-		Make the map boundary condition for the white world
 	*/
 
 	var canvas = document.getElementById("mycanvas"),
@@ -100,7 +97,6 @@
 	var KeyCode = {
 
 		37 : "left",
-		38 : "up",
 		39 : "right",
 		16 : "shift",
 		32 : "space"
@@ -191,7 +187,8 @@
 			if(KeyStatus.space && !player.isJumping){
 				player.dy = -player.velocity * player.sign;
 				player.isJumping = true;
-				KeyStatus.up = false;
+//				KeyStatus.space = false;
+
 			}
 
 
@@ -210,8 +207,9 @@
 			// If it just collides against the floor then its cool
 			if(player.isColliding && KeyStatus.space){
 				player.dy = -player.velocity * player.sign;
-				player.isJumping = false; 
+				player.isJumping = true; 
 				player.isColliding = false;
+				KeyStatus.space = false;
 			}
 
 			resolveCollision();
@@ -254,7 +252,7 @@
 		this.y = y;
 		this.width = 50;
 		this.height = 50;
-		this.color = (value==0xffffffff)?"white":(value==65535)?"blue":(value==16711935)?"green":(value==4278190335)?"red":"black";
+		this.color = (value==0xffffffff)?"white":(value==65535)?"blue":(value==16711935)?"green":(value==4278190335)?"red":(value==4294902015)?"yellow":(value==4261478143)?"pink":(value==33686271)?"grey":"black";
 		this.restitution = 0;
 		this.mass = Infinity ;
 
@@ -344,7 +342,7 @@
 		if(player.normal.y!=0){ 
 			
 			if(player.normal.y == 1 || (player.normal.y==1 && player.sign<0) ){
-				VelAlongNormal = (player.velocity-player.dy*player.sign) * Math.cos(theta*Math.PI/180) * player.sign;
+				VelAlongNormal = 2*(player.velocity-player.dy*player.sign) * Math.cos(theta*Math.PI/180) * player.sign;
 			}
 			else{
 				VelAlongNormal = player.dy * Math.cos(theta*Math.PI/180);
@@ -508,6 +506,8 @@
 			if(pourblood){
 				draw_blood();
 				GameOver("YOU ARE FUCKED ")	;
+				localStorage['levels'] = 'level2';
+				location.reload();
 			}
 
 			if(rotateToggle){
@@ -523,6 +523,7 @@
 
 	function loadMap(map){
 
+		
 		var i,j;
 		for(i=0;i<map.width;i++){
 			for(j=0;j<map.height;j++){
@@ -538,7 +539,7 @@
 
 	function startGame(){
 
-		map = parseMap(AssetLoader.imgs['level2']);
+		map = parseMap(AssetLoader.imgs[localStorage['levels']]);
 		console.log(map);
 		loadMap(map);
 
