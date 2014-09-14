@@ -17,11 +17,39 @@
 	var bloodParticles = []; //Release when the player dies 
 	var finished = 0;
 	var pourblood = false;
+	var level = 0;
+	var won = false;
 	var rotateToggle = 0;
 	var map;
+
 	var spawn = {'x':0,'y':0};
 	var dest = {'x':0,'y':0};
-	var HashMap = {};
+	var HashMap = {
+		
+		'brown': {'map_color':'yellow','obstacles':[],'toColor1':'black','toColor2':'black'},
+		'pink' : {'map_color':'purple','obstacles':[],'toColor1':'white','toColor2':'white'},
+		'maroon' : {'map_color':'lime','obstacles':[],'toColor1':'white','toColor2':'white'},
+		'orange' : {'map_color':'gray','obstacles':[],'toColor1':'black','toColor2':'white'},
+		'violet' : {'map_color':'indigo','obstacles':[],'toColor1':'white','toColor2':'black'},
+		'gold'	: {'map_color':'silver','obstacles':[],'toColor1':'white','toColor2':'black'}
+	};
+
+	var HashColor = {
+		/*
+			Multiple UInt32 keys -> color 
+		*/
+		255:'black',
+		4294967295: 'white',
+		65535: 'blue',
+		8388863: 'green',
+		1677721855: 'red',	
+		1695122687 : 'pink',
+		4103782911 : 'purple',
+		2046830335 : 'lime',
+		1842345727 : 'maroon',
+		2189099263 : 'gold',
+		1614353407 : 'silver'
+	}
 
 	window.requestAnimFrame = function(){
 	    return (
@@ -43,8 +71,10 @@
 			'thorns' : './imgs/thorns.png',
 			'level1' : './imgs/level1.png',
 			'level2' : './imgs/level2.png',
+			'level0' : './imgs/level0.png',
 			'door'	 : './imgs/door.png',
-			'key'	 : './imgs/key.png'
+			'key'	 : './imgs/key.png',
+			'block'	 : './imgs/block.png'
 		};
 
 		this.total = Object.keys(this.imgs).length;
@@ -125,6 +155,7 @@
 	function parseMap(image) {
 		var tempCanvas = document.createElement('canvas'),
 		ctx = tempCanvas.getContext('2d');
+		ctx.globalCompositeOperation = 'source-over';
 		var grid = new Uint32Array(image.width * image.height);
 		grid.width = tempCanvas.width = image.width;
 		grid.height = tempCanvas.height = image.height;
@@ -147,6 +178,9 @@
 					val = val << 8 | dat.data[k];
 				}
 				grid[i * grid.width + j] = val;
+				if(!(val == 4294967295 || val == 255)){
+					console.log(grid[i * grid.width + j])
+				}
 			}
 		}
 		return grid;
@@ -166,12 +200,10 @@
 						player.reset();
 					}
 					terrain.push(new Floor(i*50,j*50,map.getAt(i,j)));
-					if(terrain[terrain.length-1].color=="pink"){
-						var key = map.getAt(i,j) & 0xff; // extracting only the rgba alpha bit
-						if(!(key in HashMap)){ // if the key is not there in the hash map
-							HashMap[key] = [terrain[terrain.length-1]];
-							console.log("added a new key")
-						}
+					var temp_terrain = terrain[terrain.length-1];
+					if(temp_terrain.color in HashMap){
+						HashMap[temp_terrain.color].obstacles.push(temp_terrain);
+						console.log("added a new key");
 					}
 				})();
 			}
@@ -180,19 +212,12 @@
 
 		for(var keys in HashMap){
 			(function(){
-				if(HashMap[keys].length==1){		
+				if(HashMap[keys].obstacles.length==1){		
 					for(i=0;i<terrain.length;i++){
 						
-						if(terrain[i].color == "yellow"){ //get the color of the obstacle right
-
-							// Get the box no in the map
-							var x = terrain[i].x/50;
-							var y = terrain[i].y/50;
-							console.log(map.getAt(x,y) & 0xff)
-							if((map.getAt(x,y) & 0xff) == keys){
-								console.log("oh and here we add the obstacles coordinates")
-								HashMap[keys].push(terrain[i]);
-							}
+						if(terrain[i].color == HashMap[keys].map_color){ //get the color of the obstacle right
+							console.log("oh and here we add the obstacles obstaclesinates")
+							HashMap[keys].obstacles.push(terrain[i]);
 						}
 					}
 				}
@@ -276,13 +301,10 @@
 			if(KeyStatus.space && !player.isJumping){
 				player.dy = -player.velocity * player.sign;
 				player.isJumping = true;
-//				KeyStatus.space = false;
-
 			}
 
 
 			if(player.isColliding){
-				//resolveCollision();
 				resolveCollision();
 			}
 	
@@ -342,7 +364,21 @@
 		this.width = 50;
 		this.height = 50;
 		//green value 16711935 yellow 4294902015 red 4278190335
-		this.color = (value==0xffffffff)?"white":(value==65535)?"blue":(value==8388863)?"green":(value==1677721855)?"red":(value==3923788543)?"yellow":(value==3532908543)?"pink":"black";
+		/*
+		HashColor = {
+			4294967295:'black'
+			255 : 'white'
+			65535: 'blue'
+			8388863: 'green'
+			1677721855: 'red'	
+			1695122687 : 'pink'
+			4103782911 : 'purple',
+			2046830335 : 'maroon',
+			1842345727 : 'lime'		
+		}
+		*/
+		//this.color = (value==0xffffffff)?"white":(value==65535)?"blue":(value==8388863)?"green":(value==1677721855)?"red":(value==1695122687)?"pink":(value==4103782911)?"purple":(value==1842345727)?"maroon":(value==2046830335)?"lime":"black";
+		this.color = HashColor[value]
 		this.restitution = 0;
 		this.mass = Infinity ;
 
@@ -354,9 +390,14 @@
 			else if(this.color == "blue"){
 				ctx.drawImage(AssetLoader.imgs['door'],this.x,this.y,this.width,this.height);	
 			}
+			/*
 			else if(this.color == "pink"){
 				ctx.drawImage(AssetLoader.imgs['key'],this.x,this.y,this.width,this.height);
 			}
+			else if(this.color == "yellow"){
+				ctx.drawImage(AssetLoader.imgs['block'],this.x,this.y,this.width,this.height);	
+			}
+			*/
 			else{
 				ctx.fillStyle = this.color;			
 				ctx.fillRect(this.x,this.y,this.width,this.height);
@@ -411,11 +452,6 @@
 
 	}
 	
-	function returnNewColor(){
-		var Color =  (player.color=="black")?4294967295:255;
-		return Color;
-	}
-
 	function resolveCollision(){
 		
 		var e = Math.min(player.restitution,0);
@@ -455,18 +491,56 @@
 
 	function keyGrabbed(key,i,j){
 		
-		var changeColorValue = returnNewColor();
-		for(var obstacle in HashMap[key]){
+		if(!(key in HashMap)){
+			console.log("what this ")
+			return;
+		}
+
+		
+		for(var obstacle in HashMap[key].obstacles){
 			//changing the color of the obstacles also 
-			var x = Math.floor(HashMap[key][obstacle].x/50);
-			var y = Math.floor(HashMap[key][obstacle].y/50);
+			console.log(obstacle)
+			var x = Math.floor(HashMap[key].obstacles[obstacle].x/50);
+			var y = Math.floor(HashMap[key].obstacles[obstacle].y/50);
 			//map.assign(x,y,changeColorValue);
 			console.log(x+","+y)
-			map[x*map.width + y] = changeColorValue;
+
+			//Changing the inherent property of the map 
+			if(HashMap[key].obstacles[obstacle].color==key){
+				if(HashMap[key].toColor1 == "black"){
+					map[x*map.width + y] = 255;
+				}
+				else{
+					map[x*map.width + y] = 4294967295;	
+				} 
+			}
+
+			else{
+				if(HashMap[key].toColor2 == "black"){
+					map[x*map.width + y] = 255;
+				}
+				else{
+					map[x*map.width + y] = 4294967295;	
+				} 
+			}
+
+			//Changing the display of the map
+			HashMap[key].obstacles[obstacle].color = (HashMap[key].obstacles[obstacle].color==key)?HashMap[key].toColor1:HashMap[key].toColor2;
+			
 			console.log(map.getAt(x,y))
-			//obstacle is terrain type
-			HashMap[key][obstacle].color = (player.color=="black")?"white":"black";
 		}
+	}
+
+	function isCollidableColor(list,i,j){
+		/*if brown or purple or orange or violet or gold
+			then return true
+		else 
+			return false
+		*/
+		if(list.indexOf(map.getAt(i,j))>0){
+			return true;
+		}
+		else return false;
 	}
 
 	function detectCollision(){
@@ -481,21 +555,31 @@
 		if(typeof(map)!="undefined"){
 				
 				var deathColor =   1677721855;
-				var obstacleColor = 3923788543;
+
+				// HAVE TO MAKE THIS AN ARRAY OF POSSIBLE OBSTACLE COLORS 
+				//var obstacleColor = 3923788543;
+				var obstacleColors = [3923788543,4103782911,1842345727,1695122687,2046830335,2189099263];
 				var collideColor = (player.color == "black") ? 0xff : 0xffffffff;
-				var keyColor = 3532908543 & 0xffffff00; //extract only the rgb not alpha bit
+
+
+				if(map.getAt(i,j) == 65535 && player.dy==0 ){
+					console.log("WON THE LEVEL ")
+					won = true;
+					return ;
+				}
+
 				if(player.sign>0){
 					//Map end Boundary checks 
 					if(player.y+2*player.radius>=canvas.height){
 						player.isColliding = true;
 						player.normal.y = -1;
-						KeyStatus.shift = false;
+						player.onObstacle = true;
 					}
 
 					else if(player.y-player.radius<=0){
 						player.isColliding = true;
 						player.normal.y =1;
-						KeyStatus.shift = false;
+						player.onObstacle = true;
 					}
 
 					if(player.x+player.radius>=canvas.width){ 
@@ -509,63 +593,58 @@
 					}
 					// End of boundary checking 
 
-					if((map.getAt(i, j + 1) == collideColor || map.getAt(i,j+1)==deathColor || map.getAt(i,j+1)==obstacleColor || (map.getAt(i,j+1) & 0xffffff00)==keyColor) && (j+1)*tileHeight-player.y<=player.radius ){
+					if((map.getAt(i, j + 1) == collideColor || map.getAt(i,j+1)==deathColor || isCollidableColor(obstacleColors,i,j+1)) && (j+1)*tileHeight-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = -1;
 						if(map.getAt(i,j+1)==deathColor){
 							pourblood = true;
 						}
 
-						if(map.getAt(i,j+1)==obstacleColor){
+						if(isCollidableColor(obstacleColors,i,j+1)){
 							player.onObstacle = true;
-						}
-
-						if((map.getAt(i,j+1) & 0xffffff00)==keyColor){
-							var key = map.getAt(i,j+1) & 0xff;
+							var key = HashColor[map.getAt(i,j+1)]
 							keyGrabbed(key,i,j+1);
 							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
-					else if((map.getAt(i, j-1) == collideColor || map.getAt(i,j-1)==deathColor || map.getAt(i,j-1)==obstacleColor || (map.getAt(i,j-1) & 0xffffff00)==keyColor) && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
+					else if((map.getAt(i, j-1) == collideColor || map.getAt(i,j-1)==deathColor || isCollidableColor(obstacleColors,i,j-1)) && player.y-(player.radius)/4 - ((j-1)*tileHeight+tileHeight) <= player.radius){
 						player.isColliding = true;
 						player.normal.y = 1;
 						if(map.getAt(i,j-1)==deathColor){
 							pourblood = true;
 						}
 
-						if(map.getAt(i,j-1)==obstacleColor){
+						if(isCollidableColor(obstacleColors,i,j-1)){
 							player.onObstacle = true;
-						}
-
-						if((map.getAt(i,j-1) & 0xffffff00)==keyColor){
-							var key = map.getAt(i,j-1) & 0xff;
+							var key = HashColor[map.getAt(i,j-1)]
 							keyGrabbed(key,i,j-1);
-							//HashMap[map.getAt(i,j-1) & 0xff].status = true;
+							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
-					if((map.getAt(i + 1, j) == collideColor || map.getAt(i+1,j)==deathColor ||  map.getAt(i+1,j)==obstacleColor || (map.getAt(i+1,j) & 0xffffff00)==keyColor) && (i+1)*tileWidth - player.x <= player.radius){ 
+					if((map.getAt(i + 1, j) == collideColor || map.getAt(i+1,j)==deathColor ||  isCollidableColor(obstacleColors,i+1,j)) && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 
-
-						if((map.getAt(i+1,j) & 0xffffff00)==keyColor){
-							var key = map.getAt(i+1,j) & 0xff;
+						if(isCollidableColor(obstacleColors,i+1,j)){
+							player.onObstacle = true;
+							var key = HashColor[map.getAt(i+1,j)]
 							keyGrabbed(key,i+1,j);
-							//HashMap[map.getAt(i+1,j) & 0xff].status = true;
+							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
-					else if((map.getAt(i-1 ,j) == collideColor || map.getAt(i-1,j)==deathColor || map.getAt(i-1,j)==obstacleColor || (map.getAt(i-1,j) & 0xffffff00)==keyColor) && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
+					else if((map.getAt(i-1 ,j) == collideColor || map.getAt(i-1,j)==deathColor || isCollidableColor(obstacleColors,i-1,j)) && player.x-player.radius/4- ((i-1)*tileWidth+tileWidth) <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 
 
-						if((map.getAt(i-1,j) & 0xffffff00)==keyColor){
-							var key = map.getAt(i-1,j) & 0xff;
+						if(isCollidableColor(obstacleColors,i-1,j)){
+							player.onObstacle = true;
+							var key = HashColor[map.getAt(i-1,j)]
 							keyGrabbed(key,i-1,j);
-							//HashMap[map.getAt(i-1,j) & 0xff].status = true;
+							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 				}
@@ -576,13 +655,13 @@
 					if(player.y+2*player.radius<=0){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
-						KeyStatus.shift = false;
+						player.onObstacle = true;
 					}
 
 					else if(player.y-player.radius>=canvas.height){
 						player.isColliding = true;
 						player.normal.y =-1*player.sign;
-						KeyStatus.shift = false;
+						player.onObstacle = true;
 					}
 
 					if(player.x+player.radius>=canvas.width){ 
@@ -596,60 +675,58 @@
 					}
 					// End of boundary checking 
 
-					if((map.getAt(i, j) == collideColor || map.getAt(i,j)==deathColor || map.getAt(i,j)==obstacleColor || (map.getAt(i,j) & 0xffffff00)==keyColor) && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
+					if((map.getAt(i, j) == collideColor || map.getAt(i,j)==deathColor ||isCollidableColor(obstacleColors,i,j)) && ((j)*tileHeight+tileHeight)-player.y<=player.radius ){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
 						if(map.getAt(i,j)==deathColor){
 							pourblood = true;
 						}
 
-						if(map.getAt(i,j)==obstacleColor){
+						if(isCollidableColor(obstacleColors,i,j)){
 							player.onObstacle = true;
-						}
-
-						if((map.getAt(i,j) & 0xffffff00)==keyColor){
-							var key = map.getAt(i,j) & 0xff;
+							var key = HashColor[map.getAt(i,j)]
 							keyGrabbed(key,i,j);
-							//HashMap[map.getAt(i,j) & 0xff].status = true;
+							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
-					else if((map.getAt(i, j+1) == collideColor || map.getAt(i,j+1)==deathColor || map.getAt(i,j+1)==obstacleColor || (map.getAt(i,j+1) & 0xffffff00)==keyColor) &&  ((j+1)*tileHeight)-player.y-player.radius<= player.radius){
+					else if((map.getAt(i, j+1) == collideColor || map.getAt(i,j+1)==deathColor || isCollidableColor(obstacleColors,i,j+1)) &&  ((j+1)*tileHeight)-player.y-player.radius<= player.radius){
 						player.isColliding = true;
 						player.normal.y = -1*player.sign;
 						if(map.getAt(i,j+1)==deathColor){
 							pourblood = true;
 						}
 
-						if(map.getAt(i,j+1)==obstacleColor){
+						if(isCollidableColor(obstacleColors,i,j+1)){
 							player.onObstacle = true;
-						}
-						if((map.getAt(i,j+1) & 0xffffff00)==keyColor){
-							var key = map.getAt(i,j+1) & 0xff;
+							var key = HashColor[map.getAt(i,j+1)]
 							keyGrabbed(key,i,j+1);
 							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
-					if((map.getAt(i+1,j+1) == collideColor || map.getAt(i+1,j+1)==deathColor || map.getAt(i+1,j+1)==obstacleColor || (map.getAt(i+1,j+1) & 0xffffff00)==keyColor) && (i+1)*tileWidth - player.x <= player.radius){ 
+					if((map.getAt(i+1,j+1) == collideColor || map.getAt(i+1,j+1)==deathColor ||isCollidableColor(obstacleColors,i+1,j+1)) && (i+1)*tileWidth - player.x <= player.radius){ 
 						player.isCollidingWithWalls = true;
 						player.normal.x = -1;
 
 
-						if((map.getAt(i+1,j+1) & 0xffffff00)==keyColor){
-							var key = map.getAt(i+1,j+1) & 0xff;
-							keyGrabbed(key,i+1,j+1);	
-							//HashMap[map.getAt(i+1,j+1) & 0xff].status = true;
+						if(isCollidableColor(obstacleColors,i+1,j+1)){
+							player.onObstacle = true;
+							var key = HashColor[map.getAt(i+1,j+1)]
+							keyGrabbed(key,i+1,j+1);
+							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
-					else if((map.getAt(i-1,j+1) == collideColor || map.getAt(i-1,j+1)==deathColor || map.getAt(i-1,j+1)==obstacleColor || (map.getAt(i-1,j+1) & 0xffffff00)==keyColor) && player.x-player.radius- (i)*tileWidth <= player.radius ){
+					else if((map.getAt(i-1,j+1) == collideColor || map.getAt(i-1,j+1)==deathColor || isCollidableColor(obstacleColors,i-1,j+1)) && player.x-player.radius- (i)*tileWidth <= player.radius ){
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 
-						if((map.getAt(i-1,j+1) & 0xffffff00)==keyColor){
-							var key = map.getAt(i-1,j+1) & 0xff;
-							//pass key and i and j values
+						
+						if(isCollidableColor(obstacleColors,i-1,j+1)){
+							player.onObstacle = true;
+							var key = HashColor[map.getAt(i-1,j+1)]
 							keyGrabbed(key,i-1,j+1);
+							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}	
 				}
@@ -693,7 +770,8 @@
 
 	function startGame(){
 
-		map = parseMap(AssetLoader.imgs[localStorage['levels']]);
+		//map = parseMap(AssetLoader.imgs[localStorage['levels']]);
+		map = parseMap(AssetLoader.imgs['level1']);
 		console.log(map);
 		loadMap(map);
 		animate();
