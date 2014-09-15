@@ -1,6 +1,6 @@
 .box {
-	width: 500px;
-	height: 500px;
+	width: 550px;
+	height: 550px;
 	margin: 0px auto;
 	border: thick outset aqua;
 	transition: -webkit-transform 0.5s linear;

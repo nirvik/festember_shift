@@ -49,8 +49,38 @@
 		2046830335 : 'lime',
 		1842345727 : 'maroon',
 		2189099263 : 'gold',
-		1614353407 : 'silver'
-	}
+		1614353407 : 'silver',
+		2509608447 : 'gray',
+		4066714367 : 'orange',
+		11464703 : 'brown',
+		4294902015 : 'yellow',
+		
+		1258310143 : 'violet',
+		1141793535 : 'purple',
+		3435973887	: 'silver',
+		1179010815 : 'gray',
+		4137056767 : 'indigo',
+		4153679359 : 'gold',
+		3959459071 : 'pink'
+	};
+
+	var obstacleColors = [
+		3923788543,
+		4103782911,
+		1842345727,
+		1695122687,
+		2046830335,
+		2189099263,
+		4066714367,
+		11464703,
+		4294902015,
+		1258310143,
+		1141793535,	
+		1179010815,
+		4137056767,
+		4153679359,
+		3959459071
+	];
 
 	window.requestAnimFrame = function(){
 	    return (
@@ -73,11 +103,15 @@
 			'level0' : './imgs/intro.png',
 			'level1' : './imgs/intro1.bmp',
 			'level2' : './imgs/level0.png',
-			'level3' : './imgs/level1.png',
-			'level4' : './imgs/level2.png',
+			'level3' : './imgs/intro4.png',
+			'level4' : './imgs/level1.png',
+			'level5' : './imgs/level2.png',
+			'level6' : './imgs/level3.png',
+			'level7' : './imgs/level4.png',
 			'door'	 : './imgs/door.png',
 			'key'	 : './imgs/key.png',
-			'block'	 : './imgs/block.png'
+			'lock'	 : './imgs/Lock.png',
+			'obstacle' : './imgs/obstacle.png'
 		};
 
 		this.total = Object.keys(this.imgs).length;
@@ -210,8 +244,10 @@
 						spawn.x = i*50 + 50/2;
 						spawn.y = j*50 + 50/2;
 						player.reset();
+						map.assign(i,j,4294967295);
 					}
 					terrain.push(new Floor(i*50,j*50,map.getAt(i,j)));
+
 					var temp_terrain = terrain[terrain.length-1];
 					if(temp_terrain.color in HashMap){
 						HashMap[temp_terrain.color].obstacles.push(temp_terrain);
@@ -403,6 +439,15 @@
 			else if(this.color == "blue"){
 				ctx.drawImage(AssetLoader.imgs['door'],this.x,this.y,this.width,this.height);	
 			}
+			else if(this.color in HashMap){
+				ctx.drawImage(AssetLoader.imgs['key'],this.x,this.y,this.width,this.height);		
+			}
+			else if(this.color == "silver" || this.color == "green"){
+				ctx.drawImage(AssetLoader.imgs['obstacle'],this.x,this.y,this.width,this.height);			
+			}
+			else if(this.color == "purple" || this.color == "indigo" || this.color == "gray" || this.color == "yellow" || this.color=="lime"){
+				ctx.drawImage(AssetLoader.imgs['lock'],this.x,this.y,this.width,this.height);				
+			}
 			else{
 				ctx.fillStyle = this.color;			
 				ctx.fillRect(this.x,this.y,this.width,this.height);
@@ -561,7 +606,7 @@
 
 				// HAVE TO MAKE THIS AN ARRAY OF POSSIBLE OBSTACLE COLORS 
 				//var obstacleColor = 3923788543;
-				var obstacleColors = [3923788543,4103782911,1842345727,1695122687,2046830335,2189099263];
+				
 				var collideColor = (player.color == "black") ? 0xff : 0xffffffff;
 
 
