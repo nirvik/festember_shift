@@ -21,6 +21,7 @@
 	var won = false;
 	var rotateToggle = 0;
 	var map;
+	var req_id;
 
 	var spawn = {'x':0,'y':0};
 	var dest = {'x':0,'y':0};
@@ -69,9 +70,11 @@
 
 		this.imgs = {
 			'thorns' : './imgs/thorns.png',
-			'level1' : './imgs/level1.png',
-			'level2' : './imgs/level2.png',
-			'level0' : './imgs/level0.png',
+			'level0' : './imgs/intro.png',
+			'level1' : './imgs/intro1.bmp',
+			'level2' : './imgs/level0.png',
+			'level3' : './imgs/level1.png',
+			'level4' : './imgs/level2.png',
 			'door'	 : './imgs/door.png',
 			'key'	 : './imgs/key.png',
 			'block'	 : './imgs/block.png'
@@ -168,6 +171,15 @@
 			grid[i * grid.width + j] = value;
 		}
 
+		grid.clear = function(){
+			var i, j, k;
+			for(i = 0; i < grid.width; i++) {
+				for(j = 0; j < grid.height; j++) {
+					grid[i * grid.width + j] = 0;
+				}
+			}	
+		}
+
 		ctx.drawImage(image, 0, 0);
 		var i, j, k;
 		for(i = 0; i < grid.width; i++) {
@@ -226,6 +238,22 @@
 		console.log(HashMap)
 	}
 	// End of Map parser
+
+	function clearHashMap(){
+		for(var keys in HashMap){
+			(function(){
+				if(HashMap[keys].obstacles.length){
+					HashMap[keys].obstacles = [];
+				}
+			})();
+		}
+		return ;
+	}
+
+	function clearTerrain(){
+		terrain = [];
+		return;
+	}
 
 	function Vector(x,y,dx,dy){
 		this.x = x || 0;
@@ -363,22 +391,7 @@
 		this.y = y;
 		this.width = 50;
 		this.height = 50;
-		//green value 16711935 yellow 4294902015 red 4278190335
-		/*
-		HashColor = {
-			4294967295:'black'
-			255 : 'white'
-			65535: 'blue'
-			8388863: 'green'
-			1677721855: 'red'	
-			1695122687 : 'pink'
-			4103782911 : 'purple',
-			2046830335 : 'maroon',
-			1842345727 : 'lime'		
-		}
-		*/
-		//this.color = (value==0xffffffff)?"white":(value==65535)?"blue":(value==8388863)?"green":(value==1677721855)?"red":(value==1695122687)?"pink":(value==4103782911)?"purple":(value==1842345727)?"maroon":(value==2046830335)?"lime":"black";
-		this.color = HashColor[value]
+		this.color = HashColor[value];
 		this.restitution = 0;
 		this.mass = Infinity ;
 
@@ -390,14 +403,6 @@
 			else if(this.color == "blue"){
 				ctx.drawImage(AssetLoader.imgs['door'],this.x,this.y,this.width,this.height);	
 			}
-			/*
-			else if(this.color == "pink"){
-				ctx.drawImage(AssetLoader.imgs['key'],this.x,this.y,this.width,this.height);
-			}
-			else if(this.color == "yellow"){
-				ctx.drawImage(AssetLoader.imgs['block'],this.x,this.y,this.width,this.height);	
-			}
-			*/
 			else{
 				ctx.fillStyle = this.color;			
 				ctx.fillRect(this.x,this.y,this.width,this.height);
@@ -526,8 +531,6 @@
 
 			//Changing the display of the map
 			HashMap[key].obstacles[obstacle].color = (HashMap[key].obstacles[obstacle].color==key)?HashMap[key].toColor1:HashMap[key].toColor2;
-			
-			console.log(map.getAt(x,y))
 		}
 	}
 
@@ -739,7 +742,7 @@
 
 	function animate(){
 		if(!finished){
-			requestAnimFrame(animate);
+			req_id = requestAnimFrame(animate);
 			ctx.clearRect(0,0,canvas.width,canvas.height);
 			updateTerrain();
 			player.update();
@@ -748,17 +751,25 @@
 			player.isCollidingWithWalls = false;
 			player.onObstacle = false;
 			detectCollision();
+
+			if(won){
+				cancelAnimationFrame(req_id);
+				level = level + 1;
+				won = 0;
+				clearTerrain();
+				clearHashMap();
+				map.clear();
+				startGame();
+			}
 			if(pourblood){
 				draw_blood();
 				GameOver("YOU ARE FUCKED ")	;
-				localStorage['levels'] = 'level2';
-				location.reload();
 			}
 
 			if(rotateToggle){
 				$('.box').toggleClass('box-rotate');
 				rotateToggle = false;
-			}	
+			}
 
 		}
 		else{
@@ -769,18 +780,18 @@
 
 
 	function startGame(){
-
-		//map = parseMap(AssetLoader.imgs[localStorage['levels']]);
-		map = parseMap(AssetLoader.imgs['level1']);
+		
+		var now = "level" + level;
+		map = parseMap(AssetLoader.imgs[now]);
 		console.log(map);
 		loadMap(map);
 		animate();
+
 	}
 
 
 	function GameOver(msg){
 
-		
 		ctx.font="30px Verdana";
 		var gradient=ctx.createLinearGradient(0,0,canvas.width,0);
 		gradient.addColorStop("0","magenta");
