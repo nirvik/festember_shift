@@ -22,7 +22,7 @@
 	var rotateToggle = 0;
 	var map;
 	var req_id;
-
+	var now = "level"+level;
 	var spawn = {'x':0,'y':0};
 	var dest = {'x':0,'y':0};
 	var HashMap = {
@@ -33,6 +33,44 @@
 		'orange' : {'map_color':'gray','obstacles':[],'toColor1':'black','toColor2':'white'},
 		'violet' : {'map_color':'indigo','obstacles':[],'toColor1':'white','toColor2':'black'},
 		'gold'	: {'map_color':'silver','obstacles':[],'toColor1':'white','toColor2':'black'}
+	};
+
+	var messages = {
+		
+		'level0': {
+					'msg':'Welcome to SHIFT , you are not so oridinary puzzle platformer',
+					'posx' : 5,
+					'posy' : canvas.height/5,
+
+					'msg2':'Use arrow keys to RUN Right & Left',
+					'posx2' : 5,
+					'posy2' : (canvas.height/4)+20
+		}, 
+
+		'level1' : {
+
+				'msg' : 'Press	Space 	To Jump!',
+				'posx' : 5,
+				'posy' : canvas.height/5
+		},
+
+		'level2' :{
+
+				'msg' : 'Grab the key to ',
+				'posx' : 5,
+				'posy' : canvas.height/4,
+				
+				'msg2'	: 'Unlock the secret passage',
+				'posx2' : 5,
+				'posy2' : (canvas.height/4)+20
+		},
+
+		'level3' :{
+				'msg' : 'SOMETIMES THE ONLY THING LEFT TO TRY IS SHIFT ',
+				'posx' : 5,
+				'posy' : canvas.height/5
+
+		}
 	};
 
 	var HashColor = {
@@ -792,6 +830,20 @@
 			updateTerrain();
 			player.update();
 			player.draw();
+			if(now in messages){
+				console.log(messages[now].posy)
+				ctx.font="20px Verdana";
+				// Fill with gradient
+				ctx.fillStyle="black";
+				ctx.fillText(messages[now].msg,messages[now].posx,messages[now].posy);	
+				if('msg2' in messages[now]){
+					ctx.font="20px Verdana";
+					// Fill with gradient
+					ctx.fillStyle="black";
+					ctx.fillText(messages[now].msg2,messages[now].posx2,messages[now].posy2);	
+						
+				}		
+			}
 			player.isColliding = false;
 			player.isCollidingWithWalls = false;
 			player.onObstacle = false;
@@ -807,8 +859,15 @@
 				startGame();
 			}
 			if(pourblood){
-				draw_blood();
-				GameOver("YOU ARE FUCKED ")	;
+				//draw_blood();
+
+				cancelAnimationFrame(req_id);
+				pourblood = false;
+				clearTerrain();
+				clearHashMap();
+				map.clear();
+				GameOver("LOL YOU JUST DECIDED TO LAND ON THE THORNS ");
+				setTimeout(startGame, 3000);
 			}
 
 			if(rotateToggle){
@@ -826,7 +885,7 @@
 
 	function startGame(){
 		
-		var now = "level" + level;
+		now = "level" + level;
 		map = parseMap(AssetLoader.imgs[now]);
 		console.log(map);
 		loadMap(map);
@@ -837,14 +896,14 @@
 
 	function GameOver(msg){
 
-		ctx.font="30px Verdana";
+		ctx.font="20px Verdana";
 		var gradient=ctx.createLinearGradient(0,0,canvas.width,0);
 		gradient.addColorStop("0","magenta");
 		gradient.addColorStop("0.5","blue");
 		gradient.addColorStop("1.0","red");
 		// Fill with gradient
 		ctx.fillStyle=gradient;
-		ctx.fillText(msg,canvas.width/2,canvas.height/2);
+		ctx.fillText(msg,0,canvas.height/5);
 		
 	}	
 
