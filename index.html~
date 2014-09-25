@@ -1,0 +1,12 @@
+<html>
+	<title> Shift </title>
+	<link rel='stylesheet' href='shift.css' />
+    <div id="sekhar" class="box">
+	<canvas id="mycanvas" width="550px" height="550px"> Your browser doesnot support Canvas</canvas>
+	</div>
+	<body>
+
+		<script type="text/javascript" src="shift1.js"></script>
+		<script type="text/javascript" src="jquery.js"></script>
+	</body>
+</html>

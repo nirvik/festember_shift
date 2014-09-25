@@ -1,4 +1,41 @@
 (function(){
+window.fbAsyncInit = function() {
+    // init the FB JS SDK
+    FB.init({
+      appId      : '810528735676835',
+      status     : true,
+      xfbml      : true
+    });
+
+  };
+
+  // Load the SDK asynchronously
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/all.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+
+function FBShareOp(){
+    var product_name   =    'SHIFT';
+    var description    =    'Is the floor the roof? Is the roof the floor? Find the answers to all the above questions and more in this puzzle platformer!';
+    var share_image    =    'http://festember.com/~games/shift/logo.png';
+    var share_url      =    'http://festember.com/~games/shift';
+    FB.ui({
+        method: 'feed',
+        name: product_name,
+        link: share_url,
+        picture: share_image,
+        description: description
+
+    }, function(response) {
+        if(response && response.post_id){}
+        else{}
+    });
+
+}
 
 	/* Todo
 
@@ -17,7 +54,7 @@
 	var bloodParticles = []; //Release when the player dies 
 	var finished = 0;
 	var pourblood = false;
-	var level = 0;
+	var level =0;
 	var won = false;
 	var rotateToggle = 0;
 	var map;
@@ -38,7 +75,7 @@
 	var messages = {
 		
 		'level0': {
-					'msg':'Welcome to SHIFT , you are not so oridinary puzzle platformer',
+					'msg':'Welcome to SHIFT,your not so oridinary puzzle platformer',
 					'posx' : 5,
 					'posy' : canvas.height/5,
 
@@ -66,11 +103,12 @@
 		},
 
 		'level3' :{
-				'msg' : 'SOMETIMES THE ONLY THING LEFT TO TRY IS SHIFT ',
+				'msg' : 'Sometimes The Only Thing Left To Try Is SHIFT',
 				'posx' : 5,
 				'posy' : canvas.height/5
 
-		}
+		},
+		
 	};
 
 	var HashColor = {
@@ -117,7 +155,9 @@
 		1179010815,
 		4137056767,
 		4153679359,
-		3959459071
+		3959459071,
+
+		2509608447
 	];
 
 	window.requestAnimFrame = function(){
@@ -165,7 +205,7 @@
 				loaded+=1;
 
 				if(loaded == this.total){
-					console.log("All resources have been loaded");
+					//console.log("All resources have been loaded");
 					startGame();
 				}
 			}
@@ -211,6 +251,7 @@
 
 	document.onkeyup = function(e){
 		var key = e.keyCode;
+		
 		if(KeyCode[key]){
 			KeyStatus[KeyCode[key]] = false;
 		}
@@ -263,7 +304,6 @@
 				}
 				grid[i * grid.width + j] = val;
 				if(!(val == 4294967295 || val == 255)){
-					console.log(grid[i * grid.width + j])
 				}
 			}
 		}
@@ -276,7 +316,6 @@
 		var i,j;
 		for(i=0;i<map.width;i++){
 			for(j=0;j<map.height;j++){
-				//16711935
 				(function(){
 					if(map.getAt(i,j)==8388863){
 						spawn.x = i*50 + 50/2;
@@ -289,7 +328,6 @@
 					var temp_terrain = terrain[terrain.length-1];
 					if(temp_terrain.color in HashMap){
 						HashMap[temp_terrain.color].obstacles.push(temp_terrain);
-						console.log("added a new key");
 					}
 				})();
 			}
@@ -302,14 +340,12 @@
 					for(i=0;i<terrain.length;i++){
 						
 						if(terrain[i].color == HashMap[keys].map_color){ //get the color of the obstacle right
-							console.log("oh and here we add the obstacles obstaclesinates")
 							HashMap[keys].obstacles.push(terrain[i]);
 						}
 					}
 				}
 			})();
 		}	
-		console.log(HashMap)
 	}
 	// End of Map parser
 
@@ -401,7 +437,7 @@
 			}
 
 			if(KeyStatus.space && !player.isJumping){
-				player.dy = -player.velocity * player.sign;
+				player.dy = -player.velocity * player.sign ;
 				player.isJumping = true;
 			}
 
@@ -493,31 +529,6 @@
 		}
 	}
 
-	function createBlood(){
-
-		this.x = player.x;
-		this.y = player.y;
-		
-		this.vx = Math.random()*20 - 10;
-		this.vy = Math.random()*20 - 10;
-
-		this.color = "red";
-		this.radius = 3;
-
-		this.draw = function(){
-			ctx.fillStyle = this.color;
-			ctx.beginPath();
-			if(player.portal){
-				ctx.arc(this.x,this.y-2*player.radius,this.radius,Math.PI * 2,false);
-			}
-			else{
-				ctx.arc(this.x,this.y+2*player.radius,this.radius,Math.PI * 2,false);
-			}
-			ctx.closePath();
-			ctx.fill();
-		}
-	}
-
 	function updateTerrain(){
 
 		for(var i=0;i<terrain.length;i++){
@@ -580,18 +591,14 @@
 	function keyGrabbed(key,i,j){
 		
 		if(!(key in HashMap)){
-			console.log("what this ")
 			return;
 		}
 
 		
 		for(var obstacle in HashMap[key].obstacles){
 			//changing the color of the obstacles also 
-			console.log(obstacle)
 			var x = Math.floor(HashMap[key].obstacles[obstacle].x/50);
 			var y = Math.floor(HashMap[key].obstacles[obstacle].y/50);
-			//map.assign(x,y,changeColorValue);
-			console.log(x+","+y)
 
 			//Changing the inherent property of the map 
 			if(HashMap[key].obstacles[obstacle].color==key){
@@ -643,13 +650,11 @@
 				var deathColor =   1677721855;
 
 				// HAVE TO MAKE THIS AN ARRAY OF POSSIBLE OBSTACLE COLORS 
-				//var obstacleColor = 3923788543;
 				
 				var collideColor = (player.color == "black") ? 0xff : 0xffffffff;
 
 
 				if(map.getAt(i,j) == 65535 && player.dy==0 ){
-					console.log("WON THE LEVEL ")
 					won = true;
 					return ;
 				}
@@ -690,7 +695,6 @@
 							player.onObstacle = true;
 							var key = HashColor[map.getAt(i,j+1)]
 							keyGrabbed(key,i,j+1);
-							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
@@ -705,7 +709,6 @@
 							player.onObstacle = true;
 							var key = HashColor[map.getAt(i,j-1)]
 							keyGrabbed(key,i,j-1);
-							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
@@ -717,7 +720,6 @@
 							player.onObstacle = true;
 							var key = HashColor[map.getAt(i+1,j)]
 							keyGrabbed(key,i+1,j);
-							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
@@ -730,7 +732,6 @@
 							player.onObstacle = true;
 							var key = HashColor[map.getAt(i-1,j)]
 							keyGrabbed(key,i-1,j);
-							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 				}
@@ -738,7 +739,7 @@
 				else{
 
 					//Map boundary checks 
-					if(player.y+2*player.radius<=0){
+					if(player.y+player.radius<=0){
 						player.isColliding = true;
 						player.normal.y = 1*player.sign;
 						player.onObstacle = true;
@@ -787,7 +788,6 @@
 							player.onObstacle = true;
 							var key = HashColor[map.getAt(i,j+1)]
 							keyGrabbed(key,i,j+1);
-							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 					if((map.getAt(i+1,j+1) == collideColor || map.getAt(i+1,j+1)==deathColor ||isCollidableColor(obstacleColors,i+1,j+1)) && (i+1)*tileWidth - player.x <= player.radius){ 
@@ -799,7 +799,6 @@
 							player.onObstacle = true;
 							var key = HashColor[map.getAt(i+1,j+1)]
 							keyGrabbed(key,i+1,j+1);
-							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}
 
@@ -807,12 +806,10 @@
 						player.isCollidingWithWalls = true;
 						player.normal.x = 1;
 
-						
 						if(isCollidableColor(obstacleColors,i-1,j+1)){
 							player.onObstacle = true;
 							var key = HashColor[map.getAt(i-1,j+1)]
 							keyGrabbed(key,i-1,j+1);
-							//HashMap[map.getAt(i,j+1) & 0xff].status = true;
 						}
 					}	
 				}
@@ -831,14 +828,11 @@
 			player.update();
 			player.draw();
 			if(now in messages){
-				console.log(messages[now].posy)
-				ctx.font="20px Verdana";
-				// Fill with gradient
+				ctx.font="15px Verdana";
 				ctx.fillStyle="black";
 				ctx.fillText(messages[now].msg,messages[now].posx,messages[now].posy);	
 				if('msg2' in messages[now]){
-					ctx.font="20px Verdana";
-					// Fill with gradient
+					ctx.font="15px Verdana";
 					ctx.fillStyle="black";
 					ctx.fillText(messages[now].msg2,messages[now].posx2,messages[now].posy2);	
 						
@@ -856,18 +850,26 @@
 				clearTerrain();
 				clearHashMap();
 				map.clear();
-				startGame();
+				if(level<8){
+					startGame();
+				}
+
+				else{
+					ctx.clearRect(0,0,canvas.width,canvas.height);
+					ctx.font="20px Verdana";
+					ctx.fillStyle="black";
+					ctx.fillText('Awesome work ! More levels Next Festember ;)',0,200);
+					setTimeout(FBShareOp(),2000)
+				}
 			}
 			if(pourblood){
-				//draw_blood();
-
 				cancelAnimationFrame(req_id);
 				pourblood = false;
 				clearTerrain();
 				clearHashMap();
 				map.clear();
-				GameOver("LOL YOU JUST DECIDED TO LAND ON THE THORNS ");
-				setTimeout(startGame, 3000);
+				GameOver("YOU JUST DECIDED TO LAND ON THE THORNS! Superb :* ");
+				setTimeout(startGame, 2000);
 			}
 
 			if(rotateToggle){
@@ -876,35 +878,38 @@
 			}
 
 		}
-		else{
-			GameOver();
-		}
 	}
 
 
 
 	function startGame(){
-		
+
 		now = "level" + level;
 		map = parseMap(AssetLoader.imgs[now]);
-		console.log(map);
 		loadMap(map);
+		
 		animate();
 
 	}
 
-
 	function GameOver(msg){
 
+		ctx.clearRect(0,0,canvas.width,canvas.height);
 		ctx.font="20px Verdana";
 		var gradient=ctx.createLinearGradient(0,0,canvas.width,0);
 		gradient.addColorStop("0","magenta");
 		gradient.addColorStop("0.5","blue");
 		gradient.addColorStop("1.0","red");
-		// Fill with gradient
 		ctx.fillStyle=gradient;
 		ctx.fillText(msg,0,canvas.height/5);
-		
+		if(player.color == 'white'){
+			$('.box').removeClass('box-rotate');
+			rotateToggle = false;
+			player.portal = player.portal^1;
+			player.sign = 1;
+			player.update();	
+			console.log(player.portal)
+		}		
 	}	
 
 	AssetLoader.downloadAll();
